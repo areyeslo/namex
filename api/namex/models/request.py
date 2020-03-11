@@ -248,11 +248,10 @@ class Request(db.Model):
 
     # TODO: Replace this method... use the models!
     @classmethod
-    def build_query_descriptive(cls, desc_substitution_list, query):
-        for element in desc_substitution_list:
-            query += " and lower(n.name) similar to "
-            substitutions = ' ?| '.join(map(str, element))
-            query += "'" + "%%( " + substitutions + " ?)%%" + "'"
+    def build_query_descriptive(cls, descriptive_element, query):
+        query += " and lower(n.name) similar to "
+        substitutions = ' ?| '.join(map(str, descriptive_element))
+        query += "'" + "%%( " + substitutions + " ?)%%" + "'"
 
         return query
 

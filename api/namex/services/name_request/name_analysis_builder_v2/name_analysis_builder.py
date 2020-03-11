@@ -156,6 +156,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             dist_substitution_list = []
             desc_synonym_list = []
             dist_all_permutations = []
+            query_dist = ''
 
             dist_substitution_dict = syn_svc.get_all_substitutions_synonyms(w_dist)
             dist_substitution_list = dist_substitution_dict.values()
@@ -163,7 +164,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
             # Inject distinctive section in query
             for element in dist_all_permutations:
-                query = Request.get_query_distinctive(element, len(element[0]))
+                query_dist = Request.get_query_distinctive(element, len(element[0]))
 
             desc_synonym_dict = syn_svc.get_all_substitutions_synonyms(w_desc, False)
             desc_synonym_list = desc_synonym_dict.values()
@@ -172,14 +173,15 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             desc_synonym_list = desc_synonym_dict.values()
             # Inject descriptive section into query, execute and add matches to list
             if desc_synonym_list:
-                query = Request.get_query_descriptive(desc_synonym_list, query)
-                matches = Request.get_conflicts(query)
-                matches_response.extend([val.pop() for i, val in enumerate(matches.values.tolist())])
-                matches_response = list(dict.fromkeys(matches_response))
-                dict_highest_counter, dict_highest_detail = self.get_most_similar_names(dict_highest_counter,
-                                                                                        dict_highest_detail,
-                                                                                        matches_response, w_dist,
-                                                                                        w_desc, list_name, name)
+                for element in desc_synonym_list:
+                    query = Request.get_query_descriptive(element, query_dist)
+                    matches = Request.get_conflicts(query)
+                    matches_response.extend([val.pop() for i, val in enumerate(matches.values.tolist())])
+                    matches_response = list(dict.fromkeys(matches_response))
+                    dict_highest_counter, dict_highest_detail = self.get_most_similar_names(dict_highest_counter,
+                                                                                            dict_highest_detail,
+                                                                                            matches_response, w_dist,
+                                                                                            w_desc, list_name, name)
 
         most_similar_names.extend(
             list({k for k, v in
@@ -347,7 +349,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             desc_substitution_list = [item for sublist in desc_substitution_list for item in sublist]
 
             all_substitutions = dist_substitution_list + desc_substitution_list
-
+            all_subs_stem = [porter.stem(substitution.lower()) for substitution in all_substitutions]
             dict_matches_counter = {}
             dict_matches_words = {}
             for match in matches:
@@ -356,7 +358,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                 word_n = 0
                 for word in match_list:
                     word_n += 1
-                    if porter.stem(word.lower()) in all_substitutions:
+                    if porter.stem(word.lower()) in all_subs_stem:
                         counter += 1
                 dict_matches_counter.update({match: counter / word_n})
 
