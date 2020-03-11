@@ -20,10 +20,28 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     Override the abstract / base class method
     @return ProcedureResult[] An array of procedure results
     '''
+
     def check_name_is_well_formed(self, list_dist, list_desc, list_none, list_name):
         results = []
 
         _, _, list_incorrect_classification = validate_distinctive_descriptive_lists(list_name, list_dist, list_desc)
+
+        if len(list_name) < 2 and len(list_dist) == 1:
+            result = ProcedureResult()
+            result.result_code = AnalysisResultCodes.ADD_DESCRIPTIVE_WORD
+            result.values = {
+                'list_name': list_name or [],
+                'list_dist': list_dist or []
+            }
+
+            results.append(result)
+        elif len(list_name) < 2 and len(list_dist) == 0:
+            result = ProcedureResult()
+            result.is_valid = False
+            result.result_code = AnalysisResultCodes.ADD_DISTINCTIVE_WORD
+            result.values = list_name
+
+            results.append(result)
 
         if len(list_none) > 0:
             unclassified_words_list_response = []
@@ -87,6 +105,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     Override the abstract / base class method
     @return ProcedureResult
     '''
+
     def check_words_to_avoid(self, list_name, name):
         result = ProcedureResult()
         result.is_valid = True
@@ -121,6 +140,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
            list_desc = ['FOOD', 'GROWERS']
     @return ProcedureResult
     '''
+
     def search_conflicts(self, list_dist_words, list_desc_words, list_name, name):
         syn_svc = self.synonym_service
 
@@ -213,6 +233,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     Override the abstract / base class method
     @return ProcedureResult
     '''
+
     def check_words_requiring_consent(self, list_name, name):
         result = ProcedureResult()
         result.is_valid = True
@@ -250,7 +271,8 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     @return ProcedureResult
     '''
 
-    def check_designation(self, list_name, entity_type_user, all_designations, wrong_designation_place, misplaced_designation_any, misplaced_designation_end, all_designations_user):
+    def check_designation(self, list_name, entity_type_user, all_designations, wrong_designation_place,
+                          misplaced_designation_any, misplaced_designation_end, all_designations_user):
         result = ProcedureResult()
         result.is_valid = True
 
@@ -283,6 +305,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     Override the abstract / base class method
     @return ProcedureResult
     '''
+
     def check_word_special_use(self, list_name, name):
         result = ProcedureResult()
         result.is_valid = True
@@ -310,7 +333,8 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         return result
 
-    def get_most_similar_names(self, dict_highest_counter, dict_highest_detail, matches, list_dist, list_desc, list_name, name):
+    def get_most_similar_names(self, dict_highest_counter, dict_highest_detail, matches, list_dist, list_desc,
+                               list_name, name):
         syn_svc = self.synonym_service
 
         if matches:
