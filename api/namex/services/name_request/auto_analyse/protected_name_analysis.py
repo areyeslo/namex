@@ -63,8 +63,8 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
     def _set_misplaced_designation_in_input_name(self):
         syn_svc = self.synonym_service
         original_name = self.get_original_name()
-        correct_designation_end_list = self._designation_end_list
-        correct_designation_any_list = self._designation_any_list
+        correct_designation_end_list = self._designation_end_list_user
+        correct_designation_any_list = self._designation_any_list_user
 
         self._misplaced_designation_any_list = syn_svc.get_misplaced_any_designations(original_name, correct_designation_any_list)
         self._misplaced_designation_end_list = syn_svc.get_misplaced_end_designations(original_name, correct_designation_end_list)
