@@ -44,10 +44,16 @@ class WordClassification(db.Model):
     @classmethod
     def find_word_classification(cls, word):
         # TODO: Can we return more than one result?
-        results = cls.query.filter(func.lower(WordClassification.word) == func.lower(word))
+        # results = cls.query.filter(func.lower(WordClassification.word) == func.lower(word))
+        results = db.session.query(cls.word, cls.classification) \
+            .filter(func.lower(cls.word) == func.lower(word)) \
+            .filter(cls.end_dt == None) \
+            .filter(cls.start_dt <= date.today()) \
+            .filter(cls.approved_dt <= date.today()).all()
         print(word)
         print(list(map(lambda x: x.classification, results)))
-        return cls.query.filter(func.lower(WordClassification.word) == func.lower(word)).all()
+        return results
+        # return cls.query.filter(func.lower(WordClassification.word) == func.lower(word)).all()
     '''
     # TODO: Fix this it's not working...
     @classmethod
