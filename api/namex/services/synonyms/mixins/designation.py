@@ -128,9 +128,9 @@ class SynonymDesignationMixin(SynonymServiceMixin):
         entity_types = [
             XproUnprotectedNameEntityTypes.XPRO_LIMITED_LIABILITY_COMPANY,
             BCUnprotectedNameEntityTypes.BC_LIMITED_LIABILITY_PARTNERSHIP,
-            BCProtectedNameEntityTypes.BC_COMMUNITY_CONTRIBUTION_COMPANY,
+            #BCProtectedNameEntityTypes.BC_COMMUNITY_CONTRIBUTION_COMPANY,
             BCProtectedNameEntityTypes.BC_UNLIMITED_LIABILITY_COMPANY,
-            BCProtectedNameEntityTypes.BC_BENEFIT_COMPANY,
+            #BCProtectedNameEntityTypes.BC_BENEFIT_COMPANY,
             BCProtectedNameEntityTypes.BC_CORPORATION
         ]
 
@@ -146,9 +146,9 @@ class SynonymDesignationMixin(SynonymServiceMixin):
 
     def get_all_any_designations(self):
         entity_types = [
-            BCProtectedNameEntityTypes.BC_COOPERATIVE,
-            BCProtectedNameEntityTypes.BC_COMMUNITY_CONTRIBUTION_COMPANY,
-            XproUnprotectedNameEntityTypes.XPRO_COOPERATIVE
+            #BCProtectedNameEntityTypes.BC_COOPERATIVE,
+            #BCProtectedNameEntityTypes.BC_COMMUNITY_CONTRIBUTION_COMPANY,
+           # XproUnprotectedNameEntityTypes.XPRO_COOPERATIVE
         ]
 
         entity_any_designation_dict = {}
