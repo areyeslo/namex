@@ -59,3 +59,6 @@ class GetDesignationsListsMixin(object):
 
     def get_all_designations(self):
         return self._all_designations
+
+    def get_all_word_numbers(self):
+        return self._word_numbers
