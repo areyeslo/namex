@@ -164,7 +164,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         designation_all_regex = "(" + '|'.join(designation_all) + ")"
         prefixes = '|'.join(prefix_list)
         ordinal_suffixes = 'ST|[RN]D|TH'
-        stand_alone_words = 'HOLDINGS$|BC$|VENTURES$'
+        stand_alone_words = 'HOLDINGS$|BC$|VENTURES$|SOLUTION$|ENTERPRISE$|INDUSTRIES$'
         internet_domains = '.COM'
 
         # Build exception list to avoid separation of numbers and letters when they are part of synonym table such as H20, 4MULA, ACTIV8
