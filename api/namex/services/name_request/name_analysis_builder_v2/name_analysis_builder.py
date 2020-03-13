@@ -24,6 +24,10 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     def check_name_is_well_formed(self, list_dist, list_desc, list_none, list_name):
         results = []
 
+        #list_name = ['victoria', 'abc', 'view', 'book']
+        #list_dist = ['victoria', 'book']
+        #list_desc = ['victoria', 'abc', 'view']
+        # Returns words in wrong classification following distinctive | descriptive: [{book:3}]
         _, _, list_incorrect_classification = validate_distinctive_descriptive_lists(list_name, list_dist, list_desc)
 
         if len(list_name) < 2 and len(list_dist) == 1:
@@ -156,25 +160,19 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             dist_substitution_list = []
             desc_synonym_list = []
             dist_all_permutations = []
-            query_dist = ''
-
             dist_substitution_dict = syn_svc.get_all_substitutions_synonyms(w_dist)
             dist_substitution_list = dist_substitution_dict.values()
-            dist_all_permutations.append(list(itertools.product(*dist_substitution_list)))
+
+            desc_synonym_dict = syn_svc.get_all_substitutions_synonyms(w_desc, False)
+            desc_synonym_list = desc_synonym_dict.values()
 
             # Inject distinctive section in query
-            for element in dist_all_permutations:
-                query_dist = Request.get_query_distinctive(element, len(element[0]))
-
-            desc_synonym_dict = syn_svc.get_all_substitutions_synonyms(w_desc, False)
-            desc_synonym_list = desc_synonym_dict.values()
-
-            desc_synonym_dict = syn_svc.get_all_substitutions_synonyms(w_desc, False)
-            desc_synonym_list = desc_synonym_dict.values()
-            # Inject descriptive section into query, execute and add matches to list
-            if desc_synonym_list:
-                for element in desc_synonym_list:
-                    query = Request.get_query_descriptive(element, query_dist)
+            for dist in dist_substitution_list:
+                query_dist = Request.get_general_query()
+                query_dist = Request.get_query_distinctive_descriptive(dist, query_dist, True)
+                # Inject descriptive section into query, execute and add matches to list
+                for desc in desc_synonym_list:
+                    query = Request.get_query_distinctive_descriptive(desc, query_dist)
                     matches = Request.get_conflicts(query)
                     matches_response.extend([val.pop() for i, val in enumerate(matches.values.tolist())])
                     matches_response = list(dict.fromkeys(matches_response))
@@ -182,7 +180,6 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                                                                                             dict_highest_detail,
                                                                                             matches_response, w_dist,
                                                                                             w_desc, list_name, name)
-
         most_similar_names.extend(
             list({k for k, v in
                   sorted(dict_highest_counter.items(), key=lambda item: (-item[1], item[0]))[0:MAX_MATCHES_LIMIT]}))
