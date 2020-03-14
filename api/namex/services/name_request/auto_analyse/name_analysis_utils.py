@@ -30,13 +30,12 @@ def get_flat_list(lst):
     # return subs_list
 
 
-def remove_french(text, fr_designation_end_list):
-    compound = re.findall(r'[^/]+(?://[^/]*)*', text)
-    if len(compound) == 2:
-        fr_list_text = [x.lower() for x in compound[1].split(" ") if x]
-        if any(item in fr_designation_end_list for item in fr_list_text):
-            compound.pop()
-            text = ' '.join(map(str, compound))
+def remove_french(text):
+    text = re.sub(r'/(\w+(?:[^\w\n]+\w+)+[^\w\n]*$)?',
+                  ' ',
+                  text,
+                  0,
+                  re.IGNORECASE)
     return text
 
 

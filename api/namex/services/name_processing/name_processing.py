@@ -100,7 +100,7 @@ class NameProcessingService(GetSynonymListsMixin):
 
         words = text.lower()
         words = remove_stop_words(words, stop_words)
-        # words = remove_french(words, fr_designation_end_list)
+        words = remove_french(words)
         tokens = syn_svc.regex_transform(words, designation_any, designation_end, designation_all, prefix_list, number_list)
         tokens = tokens.split()
 
