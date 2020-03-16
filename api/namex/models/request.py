@@ -242,12 +242,12 @@ class Request(db.Model):
     # TODO: Replace this method... use the models!
     @classmethod
     def build_query_descriptive(cls, descriptive_element, query, distinctive=False):
-        query += " and lower(n.name) similar to "
+        query += " and lower(n.name) ~ "
         substitutions = ' ?| '.join(map(str, descriptive_element))
         if not distinctive:
             query += "'" + "\\y( " + substitutions + " ?)\\y" + "'"
         else:
-            query += "'" + "(" + substitutions + ")%%" + "'"
+            query += "'" + "\\y(" + substitutions + ")\\y" + "'"
 
         return query
 
