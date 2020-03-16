@@ -245,7 +245,7 @@ class Request(db.Model):
         query += " and lower(n.name) similar to "
         substitutions = ' ?| '.join(map(str, descriptive_element))
         if not distinctive:
-            query += "'" + "%%( " + substitutions + " ?)%%" + "'"
+            query += "'" + "\\y( " + substitutions + " ?)\\y" + "'"
         else:
             query += "'" + "(" + substitutions + ")%%" + "'"
 
