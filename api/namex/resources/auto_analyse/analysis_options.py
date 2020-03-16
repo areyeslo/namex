@@ -146,10 +146,21 @@ class ReplaceDesignationSetup(Setup):
     pass
 
 
+class ChangeDesignationSetup(Setup):
+    pass
+
+
 replace_designation_setup = ReplaceDesignationSetup(
     type="replace_designation",
     header="Replace Designation",
     line1="Change the designation from to one of the following:",
+    line2=""
+)
+
+change_designation_order_setup = ChangeDesignationSetup(
+    type="change designation at the end",
+    header="Change Designation order",
+    line1="Change designation order to the end of the name.",
     line2=""
 )
 

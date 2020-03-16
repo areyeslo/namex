@@ -24,9 +24,9 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     def check_name_is_well_formed(self, list_dist, list_desc, list_none, list_name):
         results = []
 
-        #list_name = ['victoria', 'abc', 'view', 'book']
-        #list_dist = ['victoria', 'book']
-        #list_desc = ['victoria', 'abc', 'view']
+        # list_name = ['victoria', 'abc', 'view', 'book']
+        # list_dist = ['victoria', 'book']
+        # list_desc = ['victoria', 'abc', 'view']
         # Returns words in wrong classification following distinctive | descriptive: [{book:3}]
         _, _, list_incorrect_classification = validate_distinctive_descriptive_lists(list_name, list_dist, list_desc)
 
@@ -265,37 +265,50 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     list_name: original name tokenized
     entity_type_user: Entity type typed u user in UI
     all_designations: All Designations found in name (either misplaced or not)
-    wrong_designation_place: Designations found in name in wrong place
     all_designations_user: All designations for the entity type typed by the user. 
     @return ProcedureResult
     '''
 
-    def check_designation(self, list_name, entity_type_user, all_designations, wrong_designation_place,
-                          misplaced_designation_any, misplaced_designation_end, all_designations_user):
+    def check_designation_mismatch(self, list_name, entity_type_user, all_designations,
+                                   all_designations_user):
         result = ProcedureResult()
         result.is_valid = True
 
         mismatch_entity_designation_list = []
-        # mismatch_wrong_designation_place = []
         for idx, token in enumerate(list_name):
             if any(token in designation for designation in all_designations):
                 if token not in all_designations_user:
                     mismatch_entity_designation_list.append(token.upper())
-        '''
-        if wrong_designation_place:
-            for idx, token in enumerate(list_name):
-                if any(token in wrong_designation for wrong_designation in wrong_designation_place):
-                    mismatch_wrong_designation_place.append({idx: token.upper()})
-        '''
-        if mismatch_entity_designation_list or wrong_designation_place:
+
+        if mismatch_entity_designation_list:
             result.is_valid = False
             result.result_code = AnalysisResultCodes.DESIGNATION_MISMATCH
             result.values = {
                 'list_name': list_name,
                 'incorrect_designations': mismatch_entity_designation_list,
                 'correct_designations': all_designations_user,
+            }
+
+        return result
+
+    '''
+        Override the abstract / base class method
+        misplaced_designation_any, misplaced_designation_end, misplaced_designation_all
+        @return ProcedureResult
+        '''
+
+    def check_designation_misplaced(self, list_name, misplaced_designation_any, misplaced_designation_end, misplaced_designation_all):
+        result = ProcedureResult()
+        result.is_valid = True
+
+        if misplaced_designation_all:
+            result.is_valid = False
+            result.result_code = AnalysisResultCodes.DESIGNATION_MISPLACED
+            result.values = {
+                'list_name': list_name,
                 'misplaced_any_designation': misplaced_designation_any,
-                'misplaced_end_designation': misplaced_designation_end
+                'misplaced_end_designation': misplaced_designation_end,
+                'misplaced_all_designation': misplaced_designation_all
             }
 
         return result
