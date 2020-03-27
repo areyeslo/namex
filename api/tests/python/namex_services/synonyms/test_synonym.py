@@ -149,12 +149,15 @@ def test_regex_together_one_letter(name, expected):
                          [
                              ("ARMSTRONG 111 PLUMBING", "ARMSTRONG PLUMBING"),
                              ("ARMSTRONG PLUMBING 111", "ARMSTRONG PLUMBING"),
+                             ("ARMSTRONG 111 PLUMBING 111", "ARMSTRONG PLUMBING"),
                              ("123 HOLDINGS 2020", "123 HOLDINGS"),
                              ("ARMSTRONG 20 20 VISION", "ARMSTRONG VISION"),
-                             ("ARMSTRONG VISION 20 20", "ARMSTRONG VISION")
+                             ("ARMSTRONG VISION 20 20", "ARMSTRONG VISION"),
+                             ("ARMSTRONG ONE HUNDRED ELEVEN PLUMBING","ARMSTRONG PLUMBING"),
+                             ("ARMSTRONG PLUMBING ONE HUNDRED ELEVENTH", "ARMSTRONG PLUMBING")
                          ])
 def test_regex_strip_out_numbers_middle_end(name, expected):
-    assert syn_svc.regex_strip_out_numbers_middle_end(name) == expected
+    assert syn_svc.regex_strip_out_numbers_middle_end(name,ordinal_suffixes, numbers) == expected
 
 
 '''
