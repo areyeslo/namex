@@ -170,7 +170,6 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
     def regex_transform(self, text, designation_all, prefix_list, number_list, exceptions_ws):
         designation_all_regex = '|'.join(designation_all)
         prefixes = '|'.join(prefix_list)
-        number_list = number_list = sorted(number_list, key=len, reverse=True)
         numbers = '|'.join(number_list)
         ordinal_suffixes = 'ST|[RN]D|TH'
         stand_alone_words = 'HOLDINGS$|BC$|VENTURES$|SOLUTION$|ENTERPRISE$|INDUSTRIES$'
@@ -249,14 +248,6 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
 
     def regex_together_one_letter(self, text):
         text = re.sub(r'(?<=\b[A-Za-z]\b) +(?=[a-zA-Z]\b)|^\s+|\s+$',
-                      '',
-                      text,
-                      0,
-                      re.IGNORECASE)
-        return " ".join(text.split())
-
-    def regex_strip_out_numbers_middle_end(self, text, ordinal_suffixes, numbers):
-        text = re.sub(r'(?<=[A-Za-z]\b\s)([ 0-9]+({})?|({})\b)'.format(ordinal_suffixes, numbers),
                       '',
                       text,
                       0,
