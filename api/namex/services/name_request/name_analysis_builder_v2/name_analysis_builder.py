@@ -290,7 +290,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         mismatch_entity_designation_list = []
         for idx, token in enumerate(list_name):
-            if any(token in designation for designation in all_designations):
+            if any(token == designation for designation in all_designations):
                 if token not in all_designations_user:
                     mismatch_entity_designation_list.append(token.upper())
 
