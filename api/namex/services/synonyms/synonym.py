@@ -113,7 +113,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         return flattened
 
     def get_designations(self, entity_type_code, position_code, lang):
-        lang = lang if isinstance(lang, str) else LanguageCodes.ENG
+        lang = lang if isinstance(lang, str) else LanguageCodes.ENG.value
         model = self.get_model()
 
         filters = []
@@ -128,7 +128,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         else:
             filters.append(func.lower(model.category).op('~')(r'\y{}\y'.format('designation[s]?[_-]')))
 
-        filters.append(func.lower(model.category).op('~')(r'\y{}\y'.format(lang.value.lower())))
+        filters.append(func.lower(model.category).op('~')(r'\y{}\y'.format(lang.lower())))
 
         results = self.find_word_synonyms(None, filters)
         flattened = list(set(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results)))))))
