@@ -393,6 +393,8 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                         counter += 0.7
                     elif porter.stem(word.lower()) in all_subs_dict.values():
                         counter += 0.6
+                    else:
+                        counter -= 0.2
 
                 similarity = round(counter / length_original, 2)
                 if similarity >= 0.67:
