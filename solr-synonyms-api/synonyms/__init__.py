@@ -5,9 +5,9 @@ import flask
 import flask_sqlalchemy
 
 import config
-import synonyms.endpoints
+simport synonyms.endpoints
 import synonyms.models
-
+ 
 
 __all__ = ['create_application']
 
