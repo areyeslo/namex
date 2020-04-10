@@ -199,7 +199,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                                                                                             w_desc, list_name, name)
         most_similar_names.extend(
             list({k for k, v in
-                  sorted(dict_highest_counter.items(), key=lambda item: (-item[1], len(item[0])))[
+                  sorted(dict_highest_counter.items(), key=lambda item: (-item[1], len(item[0])))[t
                   0:MAX_MATCHES_LIMIT]}))
 
         for element in most_similar_names:
