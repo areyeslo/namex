@@ -20,6 +20,7 @@ class AnalysisResponseIssue:
     '''
     @:param setup_config Setup[]
     '''
+
     def __init__(self, entity_type, setup_config):
         self.entity_type = entity_type
         self.setup_config = []
@@ -31,6 +32,7 @@ class AnalysisResponseIssue:
     '''
     @:param setup_config Setup[]
     '''
+
     def set_issue_setups(self, setup_config):
         self.setup_config = setup_config
 
@@ -65,10 +67,10 @@ class CheckIsValid(AnalysisResponseIssue):
 Word Classification Engine Issues
 """
 
-
 '''
 @:deprecated
 '''
+
 
 # TODO: Get RID OF THIS!!!
 
@@ -347,7 +349,7 @@ class WordSpecialUse(AnalysisResponseIssue):
 
         issue = NameAnalysisIssue(
             issue_type=self.issue_type,
-            line1="The word(s) "+ self._join_list_words(list_special) + " must go to examination ",
+            line1="The word(s) " + self._join_list_words(list_special) + " must go to examination ",
             line2=None,
             consenting_body=None,
             designations=None,
@@ -470,7 +472,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
 
         # Grab the first conflict
         current_conflict_name = list(list_conflicts.keys())[0]  # eg: 'MOUNTAIN VIEW GROWERS INC.'
-        current_conflict = list_conflicts[current_conflict_name]  # eg: {'mountain': ['mountain'], 'view': ['view'], 'growers': ['growers']}
+        current_conflict = list_conflicts[
+            current_conflict_name]  # eg: {'mountain': ['mountain'], 'view': ['view'], 'growers': ['growers']}
         current_conflict_keys = list(current_conflict.keys()) if current_conflict else []
 
         is_exact_match = (list_name == current_conflict_keys)
@@ -561,6 +564,44 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
         return issue
 
 
+class DesignationNonExistentIssue(AnalysisResponseIssue):
+    issue_type = AnalysisIssueCodes.DESIGNATION_NON_EXISTENT
+    status_text = "Further Action Required"
+    issue = None
+
+    def create_issue(self, procedure_result):
+        list_name = procedure_result.values['list_name']
+        correct_designations = procedure_result.values['correct_designations']
+
+        issue = NameAnalysisIssue(
+            issue_type=self.issue_type,
+            line1="The name must include one of the following designation(s):",
+            line2=None,
+            consenting_body=None,
+            designations=correct_designations,
+            show_reserve_button=False,
+            show_examination_button=False,
+            conflicts=None,
+            setup=None,
+            name_actions=[]
+        )
+
+        # Setup boxes
+        issue.setup = self.setup_config
+        # Replace template strings in setup boxes
+        for setup_item in issue.setup:
+            # Loop over properties
+            for prop in vars(setup_item):
+                if isinstance(setup_item.__dict__[prop], Template):
+                    # Render the Template string, replacing placeholder vars
+                    setattr(setup_item, prop, setup_item.__dict__[prop].safe_substitute({
+                        'list_name': self._join_list_words(list_name),
+                        'correct_designations': self._join_list_words(correct_designations)
+                    }))
+
+        return issue
+
+
 class DesignationMismatchIssue(AnalysisResponseIssue):
     issue_type = AnalysisIssueCodes.DESIGNATION_MISMATCH
     status_text = "Further Action Required"
@@ -582,7 +623,9 @@ class DesignationMismatchIssue(AnalysisResponseIssue):
 
         issue = NameAnalysisIssue(
             issue_type=self.issue_type,
-            line1="The " + self._join_list_words(incorrect_designations) + " designation(s) cannot be used with selected entity type of " + self._join_list_words([self.entity_type]) + " </b>",
+            line1="The " + self._join_list_words(
+                incorrect_designations) + " designation(s) cannot be used with selected entity type of " + self._join_list_words(
+                [self.entity_type]) + " </b>",
             line2=None,
             consenting_body=None,
             designations=correct_designations,
@@ -640,7 +683,7 @@ class DesignationMisplacedIssue(AnalysisResponseIssue):
         issue = NameAnalysisIssue(
             issue_type=self.issue_type,
             line1="The " + self._join_list_words(
-                misplaced_end_designation) + " designation(s) cannot be used in a position different to end of the name." ,
+                misplaced_end_designation) + " designation(s) cannot be used in a position different to end of the name.",
             line2=None,
             consenting_body=None,
             designations=None,
@@ -650,7 +693,6 @@ class DesignationMisplacedIssue(AnalysisResponseIssue):
             setup=None,
             name_actions=[]
         )
-
 
         # Loop over the list_name words, we need to decide to do with each word
         for word in list_name_lc:
@@ -664,7 +706,6 @@ class DesignationMisplacedIssue(AnalysisResponseIssue):
                     index=name_word_idx,
                     type=NameActions.HIGHLIGHT
                 ))
-
 
         # Setup boxes
         # TODO: We need setup boxes for this new stuff...

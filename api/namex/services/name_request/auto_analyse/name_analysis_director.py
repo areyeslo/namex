@@ -304,7 +304,8 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
                 AnalysisIssueCodes.WORD_SPECIAL_USE,
                 AnalysisIssueCodes.CORPORATE_CONFLICT,
                 AnalysisIssueCodes.DESIGNATION_MISMATCH,
-                AnalysisIssueCodes.DESIGNATION_MISPLACED
+                AnalysisIssueCodes.DESIGNATION_MISPLACED,
+                AnalysisIssueCodes.DESIGNATION_NON_EXISTENT
             ]
 
             analysis = analysis + self.do_analysis()
