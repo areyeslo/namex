@@ -67,8 +67,9 @@ def remove_french(text):
     return " ".join(text.split())
 
 
-def remove_designations(text, designations):
-    text = re.sub(r'(?<!\w)({})(?!\w)(?=.*$)'.format(designations),
+def remove_designations(text, designation_all):
+    designation_all_regex = '|'.join(designation_all)
+    text = re.sub(r'(?<!\w)({})(?!\w)(?=.*$)'.format(designation_all_regex),
                   r' ',
                   text,
                   0,
