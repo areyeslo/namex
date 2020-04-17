@@ -67,6 +67,15 @@ def remove_french(text):
     return " ".join(text.split())
 
 
+def remove_designations(text, designations):
+    text = re.sub(r'(?<!\w)({})(?!\w)(?=.*$)'.format(designations),
+                  r' ',
+                  text,
+                  0,
+                  re.IGNORECASE)
+    return " ".join(text.split())
+
+
 def remove_stop_words(original_name_list, stop_words):
     words = ' '.join([word for x, word in enumerate(original_name_list) if word not in stop_words])
 

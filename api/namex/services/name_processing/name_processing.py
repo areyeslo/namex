@@ -1,7 +1,7 @@
 import re
 import warnings
 
-from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words
+from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words, remove_designations
 
 # from namex.services.synonyms.synonym import SynonymService
 from namex.services.word_classification.word_classification import WordClassificationService
@@ -113,6 +113,7 @@ class NameProcessingService(GetSynonymListsMixin):
         syn_svc = self.synonym_service
 
         words = remove_stop_words(self.name_original_tokens, stop_words)
+        words = remove_designations(words, designation_all)
         words = remove_french(words)
 
         exceptions_ws = syn_svc.get_exception_regex(text=words).data
