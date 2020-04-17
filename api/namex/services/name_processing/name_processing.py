@@ -10,6 +10,8 @@ from .mixins.get_synonym_lists import GetSynonymListsMixin
 
 from swagger_client import SynonymsApi as SynonymService
 
+from ..virtual_word_condition.virtual_word_condition import VirtualWordConditionService
+
 '''
 Service for pre-processing of a user submitted name request name string.
 Setting the name using NameProcessingService.set_name will clean the name and set the following properties:
@@ -79,9 +81,18 @@ class NameProcessingService(GetSynonymListsMixin):
     def synonym_service(self, svc):
         self._synonym_service = svc
 
+    @property
+    def virtual_word_condition_service(self):
+        return self._virtual_word_condition_service
+
+    @virtual_word_condition_service.setter
+    def virtual_word_condition_service(self, svc):
+        self._virtual_word_condition_service = svc
+
     def __init__(self):
         self.synonym_service = SynonymService()
         self.word_classification_service = WordClassificationService()
+        self.virtual_word_condition_service = VirtualWordConditionService()
         self.name_as_submitted = None
         self.name_as_submitted_tokenized = None
         self.name_original_tokens = None
@@ -94,6 +105,7 @@ class NameProcessingService(GetSynonymListsMixin):
     '''
     Set and process a submitted name string using the process_name class method.
     '''
+
     def set_name(self, name):
         self.name_as_submitted = name  # Store the user's submitted name string
         self.name_original_tokens = name.lower().split()
@@ -106,16 +118,19 @@ class NameProcessingService(GetSynonymListsMixin):
         regex = re.compile(r'(?<!\w)({}|[a-z-A-Z]+)(?!\w)'.format(designation_alternators))
         self.name_as_submitted_tokenized = regex.findall(name.lower())
 
-    def _clean_name_words(self, text, stop_words=[], designation_any=[], designation_end=[], designation_all=[], fr_designation_end_list=[], prefix_list=[], number_list=[]):
+    def _clean_name_words(self, text, stop_words=[], designation_any=[], designation_end=[], designation_all=[],
+                          fr_designation_end_list=[], prefix_list=[], number_list=[]):
         if not text or not stop_words or not designation_any or not designation_end or not prefix_list and not number_list:
             warnings.warn("Parameters in clean_name_words function are not set.", Warning)
 
         syn_svc = self.synonym_service
+        vwc_svc = self.virtual_word_condition_service
 
         words = remove_stop_words(self.name_original_tokens, stop_words)
         words = remove_french(words)
 
         exceptions_ws = syn_svc.get_exception_regex(text=words).data
+        exceptions_ws.extend(self.exception_virtual_word_condition(words, vwc_svc))
 
         tokens = syn_svc.get_transform_text(
             text=words,
@@ -128,6 +143,17 @@ class NameProcessingService(GetSynonymListsMixin):
         tokens = tokens.split()
 
         return [x.lower() for x in tokens if x]
+
+    def exception_virtual_word_condition(self, text, vwc_svc):
+        exceptions_ws = []
+        for word in re.sub(r'[^a-zA-Z0-9 -\']+', ' ', text, 0, re.IGNORECASE).split():
+            if vwc_svc.get_word(word):
+                exceptions_ws.append(word)
+
+        if not exceptions_ws:
+            exceptions_ws.append('null')
+
+        return exceptions_ws
 
     def _prepare_data(self):
         syn_svc = self.synonym_service
@@ -151,6 +177,7 @@ class NameProcessingService(GetSynonymListsMixin):
     Split a name string into classifiable tokens. Called whenever set_name is invoked.
     @:param string:name
     '''
+
     def _process_name(self):
         try:
             # Prepare any data that we need to pre-process the name
