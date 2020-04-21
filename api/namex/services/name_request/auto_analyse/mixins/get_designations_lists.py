@@ -1,11 +1,11 @@
 class GetDesignationsListsMixin(object):
-    _designated_end_words = []
-    _designated_any_words = []
+    _designated_end_eng_words = []
+    _designated_any_eng_words = []
 
     # Designation_any_list_user and designation_end_list_user based on entity type typed by user:
-    _designation_any_list_correct = []
-    _designation_end_list_correct = []
-    _all_designations_user = []
+    _designation_eng_any_list_correct = []
+    _designation_eng_end_list_correct = []
+    _all_designations_eng_user = []
 
     # All designations for entity type typed bu user
     designations_entity_type_user = []
@@ -30,11 +30,11 @@ class GetDesignationsListsMixin(object):
     _entity_end_designation_dict = {}
     _entity_any_designation_dict = {}
 
-    def get_designated_end_words(self):
-        return self._designated_end_words
+    def get_designated_end_eng_words(self):
+        return self._designated_end_eng_words
 
-    def get_designated_any_words(self):
-        return self._designated_any_words
+    def get_designated_any_eng_words(self):
+        return self._designated_any_eng_words
 
     # def get_misplaced_designation_in_input_name(self):
     #    return self._misplaced_designation

@@ -5,10 +5,13 @@ class GetSynonymListsMixin(object):
     _stop_words = []
     # TODO: Arturo _number_words is declared in multiple files
     _number_words = []
-    _designated_end_words = []
-    _designated_any_words = []
+    _designated_end_eng_words = []
+    _designated_end_fr_words = []
+
+    _designated_any_eng_words = []
+    _designated_any_fr_words =[]
+
     _designated_all_words = []
-    _fr_designation_end_list = []
 
     def get_prefixes(self):
         return self._prefixes
@@ -25,11 +28,14 @@ class GetSynonymListsMixin(object):
     def get_number_words(self):
         return self._number_words
 
-    def get_designated_end_words(self):
-        return self._designated_end_words
+    def get_designated_end_eng_words(self):
+        return self._designated_end_eng_words
 
-    def get_designated_any_words(self):
-        return self._designated_any_words
+    def get_designated_any_eng_words(self):
+        return self._designated_any_eng_words
 
-    def get_fr_designated_end_words(self):
-        return self._fr_designation_end_list
+    def get_designated_end_fr_words(self):
+        return self._designation_end_fr_words
+
+    def get_designated_any_fr_words(self):
+        return self._designated_any_fr_words

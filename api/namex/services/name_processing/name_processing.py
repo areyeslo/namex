@@ -7,6 +7,7 @@ from ..name_request.auto_analyse.name_analysis_utils import remove_french, remov
 from namex.services.word_classification.word_classification import WordClassificationService
 
 from .mixins.get_synonym_lists import GetSynonymListsMixin
+from . import LanguageCodes
 
 from swagger_client import SynonymsApi as SynonymService
 
@@ -138,8 +139,12 @@ class NameProcessingService(GetSynonymListsMixin):
         self._stop_words = syn_svc.get_stop_words().data
         self._prefixes = syn_svc.get_prefixes().data
         self._number_words = syn_svc.get_number_words().data
-        self._designated_end_words = syn_svc.get_designated_end_all_words().data
-        self._designated_any_words = syn_svc.get_designated_any_all_words().data
+
+        self._designated_end_words = syn_svc.get_designated_end_all_words(lang=LanguageCodes.ENG.value).data
+        self._designated_any_words = syn_svc.get_designated_any_all_words(lang=LanguageCodes.ENG.value).data
+
+        self._designated_end_fr_words = syn_svc.get_designated_end_all_words(lang=LanguageCodes.FR.value).data
+        self._designated_any_fr_words = syn_svc.get_designated_any_all_words(lang=LanguageCodes.FR.value).data
 
         self._designated_all_words = list(set(self._designated_any_words +
                                               self._designated_end_words))
