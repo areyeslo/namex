@@ -107,8 +107,8 @@ class NameProcessingService(GetSynonymListsMixin):
         regex = re.compile(r'(?<!\w)({}|[a-z-A-Z]+)(?!\w)'.format(designation_alternators))
         self.name_as_submitted_tokenized = regex.findall(name.lower())
 
-    def _clean_name_words(self, text, stop_words=[], designation_any=[], designation_end=[], designation_all=[], fr_designation_end_list=[], prefix_list=[], number_list=[]):
-        if not text or not stop_words or not designation_any or not designation_end or not prefix_list and not number_list:
+    def _clean_name_words(self, text, stop_words=[], designation_all=[], prefix_list=[], number_list=[]):
+        if not text or not stop_words or not prefix_list and not number_list:
             warnings.warn("Parameters in clean_name_words function are not set.", Warning)
 
         syn_svc = self.synonym_service
@@ -140,15 +140,23 @@ class NameProcessingService(GetSynonymListsMixin):
         self._prefixes = syn_svc.get_prefixes().data
         self._number_words = syn_svc.get_number_words().data
 
-        self._designated_end_words = syn_svc.get_designated_end_all_words(lang=LanguageCodes.ENG.value).data
-        self._designated_any_words = syn_svc.get_designated_any_all_words(lang=LanguageCodes.ENG.value).data
+        self._designated_end_eng_words = syn_svc.get_designated_end_all_words(lang=LanguageCodes.ENG.value).data
+        self._designated_any_eng_words = syn_svc.get_designated_any_all_words(lang=LanguageCodes.ENG.value).data
 
         self._designated_end_fr_words = syn_svc.get_designated_end_all_words(lang=LanguageCodes.FR.value).data
         self._designated_any_fr_words = syn_svc.get_designated_any_all_words(lang=LanguageCodes.FR.value).data
 
-        self._designated_all_words = list(set(self._designated_any_words +
-                                              self._designated_end_words))
+        self._designated_all_eng_words = list(set(self._designated_any_eng_words +
+                                              self._designated_end_eng_words))
+        self._designated_all_eng_words.sort(key=len, reverse=True)
+
+        self._designated_all_fr_words = list(set(self._designated_any_fr_words +
+                                                  self._designated_end_fr_words))
+        self._designated_all_fr_words.sort(key=len, reverse=True)
+
+        self._designated_all_words = self._designated_all_eng_words + self._designated_all_fr_words
         self._designated_all_words.sort(key=len, reverse=True)
+
         # TODO: Handle french designations
         self._fr_designation_end_list = []
 
@@ -167,10 +175,10 @@ class NameProcessingService(GetSynonymListsMixin):
                 # These properties are mixed in via GetSynonymListsMixin
                 # See the class constructor
                 self._stop_words,
-                self._designated_any_words,
-                self._designated_end_words,
+                #self._designated_any_words,
+                #self._designated_end_words,
                 self._designated_all_words,
-                self._fr_designation_end_list,
+                #self._fr_designation_end_list,
                 self._prefixes,
                 self._number_words
             )

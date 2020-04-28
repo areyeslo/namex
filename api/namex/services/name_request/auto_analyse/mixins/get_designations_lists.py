@@ -3,9 +3,13 @@ class GetDesignationsListsMixin(object):
     _designated_any_eng_words = []
 
     # Designation_any_list_user and designation_end_list_user based on entity type typed by user:
-    _designation_eng_any_list_correct = []
-    _designation_eng_end_list_correct = []
-    _all_designations_eng_user = []
+    _designation_any_eng_list_correct = []
+    _designation_end_eng_list_correct = []
+    _designation_any_fr_list_correct = []
+    _designation_end_fr_list_correct = []
+    _designation_any_list_correct = []
+    _designation_end_list_correct = []
+    #_all_designations_eng_user = []
 
     # All designations for entity type typed bu user
     designations_entity_type_user = []
