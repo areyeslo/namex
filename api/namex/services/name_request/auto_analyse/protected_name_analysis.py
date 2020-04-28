@@ -72,7 +72,7 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
                                                                                        designation_end_list=correct_designation_end_list).data
         self._misplaced_designation_end_list = designation_end_misplaced_list
 
-    def _set_designations_eng_by_entity_type_user(self):
+    def _set_designations_by_entity_type_user(self):
         syn_svc = self.synonym_service
         entity_type = self.entity_type
 
@@ -99,7 +99,7 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
                                                                          lang=LanguageCodes.FR.value).data
 
         self._designation_any_list_correct = self._designation_any_eng_list_correct + self._designation_any_fr_list_correct
-        self._designation_end_list_correct = self._designation_any_eng_list_correct + self._designation_end_fr_list_correct
+        self._designation_end_list_correct = self._designation_end_eng_list_correct + self._designation_end_fr_list_correct
 
     '''
     Set the corresponding entity type for designations <any> found in name
@@ -110,10 +110,10 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # entity_any_designation_dict = self._entity_any_designation_dict
         designation_any_list = self._designation_any_list
 
-        all_end_designations = syn_svc.get_all_end_designations().data
+        all_any_designations_dict = syn_svc.get_all_any_designations().data
 
         self._entity_type_any_designation = syn_svc.get_entity_type_any_designation(
-            entity_any_designation_dict=parse_dict_of_lists(all_end_designations),
+            entity_any_designation_dict=parse_dict_of_lists(all_any_designations_dict),
             all_designation_any_end_list=designation_any_list
         ).data
 
@@ -126,17 +126,17 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # entity_end_designation_dict = self._entity_end_designation_dict
         designation_end_list = self._designation_end_list
 
-        all_any_designations = syn_svc.get_all_any_designations().data
+        all_end_designations_dict = syn_svc.get_all_end_designations().data
 
         self._entity_type_end_designation = syn_svc.get_entity_type_end_designation(
-            entity_end_designation_dict=parse_dict_of_lists(all_any_designations),
+            entity_end_designation_dict=parse_dict_of_lists(all_end_designations_dict),
             all_designation_any_end_list=designation_end_list
         ).data
 
     def _set_designations(self):
         # Set available designations for entity type selected by user (by default designations related to 'CR' entity type)
         # _designation_any_list_user and _designation_end_list_user contain the only correct designations
-        self._set_designations_eng_by_entity_type_user()
+        self._set_designations_by_entity_type_user()
 
         # Set _designation_any_list and _designation_end_list based on company name typed by user
         # Set _all_designations (general list) based on company name typed by user
@@ -155,8 +155,11 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # Set _misplaced_designation_all based on company name typed by user
         # self._set_misplaced_designation_in_input_name()
 
+        self._designation_any_list_correct = self._designation_any_eng_list_correct + self._designation_any_fr_list_correct
+        self._designation_end_list_correct = self._designation_end_eng_list_correct + self._designation_end_fr_list_correct
+
         # Set all designations based on entity type typed by user,'CR' by default
-        self._all_designations_user = self._designation_any_eng_list_correct + self._designation_end_eng_list_correct
+        self._all_designations_user = self._designation_any_list_correct + self._designation_end_list_correct
 
         # Set all designations based on company name typed by user
         # self._all_designations = self._designation_any_list + self._designation_end_list
