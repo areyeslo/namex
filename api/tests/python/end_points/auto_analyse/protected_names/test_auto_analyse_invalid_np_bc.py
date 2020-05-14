@@ -79,10 +79,32 @@ def assert_has_issue_type(issue_type, issues):
 
 
 @pytest.mark.skip
+def assert_has_designations_upper(issue_type, issues):
+    has_upper = False
+    for issue in issues:
+        if issue.get('issue_type') == issue_type.value:
+            has_upper = all(designation.isupper() for designation in issue.get('designations')) if issue.get(
+                'designations') else True
+
+    assert has_upper is True
+
+
+@pytest.mark.skip
+def assert_has_word_upper(issue_type, issues):
+    has_upper = False
+    for issue in issues:
+        if issue.get('issue_type') == issue_type.value:
+            has_upper = all(name_action.get('word').isupper() for name_action in issue.get('name_actions'))
+
+    assert has_upper is True
+
+
+@pytest.mark.skip
 def assert_correct_conflict(issue_type, issues, expected):
     is_correct = False
     for issue in issues:
-        is_correct = True if issue.get('issue_type') == issue_type.value and " ".join(value['name'] for value in issue.get('conflicts')) == expected else False
+        is_correct = True if issue.get('issue_type') == issue_type.value and " ".join(
+            value['name'] for value in issue.get('conflicts')) == expected else False
 
     assert is_correct is True
 
@@ -141,7 +163,7 @@ def test_add_distinctive_word_base_request_response(client, jwt, app):
                     AnalysisIssueCodes.TOO_MANY_WORDS
                 ], issue)
 
-            assert_has_issue_type(AnalysisIssueCodes.ADD_DISTINCTIVE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.ADD_DISTINCTIVE_WORD, payload.get('issues'))
 
 
 # 2.- Unique word classified as distinctive
@@ -182,7 +204,7 @@ def test_add_descriptive_word_base_request_response(client, jwt, app):
                     AnalysisIssueCodes.TOO_MANY_WORDS
                 ], issue)
 
-            assert_has_issue_type(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
 
 
 # 3.- Unique word not classified in word_classification
@@ -220,7 +242,7 @@ def test_add_descriptive_word_not_classified_request_response(client, jwt, app):
                     AnalysisIssueCodes.TOO_MANY_WORDS
                 ], issue)
 
-            assert_has_issue_type(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
 
 
 # 4.- Unique word classified as distinctive and descriptive
@@ -262,7 +284,7 @@ def test_add_descriptive_word_both_classifications_request_response(client, jwt,
                     AnalysisIssueCodes.TOO_MANY_WORDS
                 ], issue)
 
-            assert_has_issue_type(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.ADD_DESCRIPTIVE_WORD, payload.get('issues'))
 
 
 # 5.- Successful well formed name:
@@ -337,7 +359,7 @@ def test_contains_one_word_to_avoid_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.WORDS_TO_AVOID, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.WORDS_TO_AVOID, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -377,7 +399,7 @@ def test_contains_more_than_one_word_to_avoid_request_response(client, jwt, app)
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.WORDS_TO_AVOID, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.WORDS_TO_AVOID, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -460,7 +482,7 @@ def test_contains_unclassifiable_word_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.CONTAINS_UNCLASSIFIABLE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.CONTAINS_UNCLASSIFIABLE_WORD, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -499,7 +521,7 @@ def test_contains_unclassifiable_words_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.CONTAINS_UNCLASSIFIABLE_WORD, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.CONTAINS_UNCLASSIFIABLE_WORD, payload.get('issues'))
 
 
 @pytest.mark.parametrize("name, expected",
@@ -719,7 +741,7 @@ def test_name_requires_consent_compound_word_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.NAME_REQUIRES_CONSENT, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.NAME_REQUIRES_CONSENT, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -774,7 +796,7 @@ def test_name_requires_consent_more_than_one_word_request_response(client, jwt, 
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.NAME_REQUIRES_CONSENT, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.NAME_REQUIRES_CONSENT, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -806,7 +828,7 @@ def test_designation_existence_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_NON_EXISTENT, payload.get('issues'))
+            assert_has_designations_upper(AnalysisIssueCodes.DESIGNATION_NON_EXISTENT, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -945,7 +967,9 @@ def test_designation_mismatch_one_word_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_designations_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1009,7 +1033,8 @@ def test_designation_mismatch_one_word_with_hyphen_request_response(client, jwt,
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_designations_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1066,7 +1091,8 @@ def test_designation_mismatch_more_than_one_word_request_response(client, jwt, a
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
+            assert_has_designations_upper(AnalysisIssueCodes.DESIGNATION_MISMATCH, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1147,7 +1173,8 @@ def test_designation_misplaced_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_MISPLACED, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.DESIGNATION_MISPLACED, payload.get('issues'))
+            assert_has_designations_upper(AnalysisIssueCodes.DESIGNATION_MISPLACED, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1201,7 +1228,7 @@ def test_name_use_special_words_request_response(client, jwt, app):
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.WORD_SPECIAL_USE, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.WORD_SPECIAL_USE, payload.get('issues'))
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1245,7 +1272,7 @@ def test_name_use_special_words_more_than_one_request_response(client, jwt, app)
         print("Assert that the payload contains issues")
         if isinstance(payload.get('issues'), list):
             assert_issues_count_is_gt(0, payload.get('issues'))
-            assert_has_issue_type(AnalysisIssueCodes.WORD_SPECIAL_USE, payload.get('issues'))
+            assert_has_word_upper(AnalysisIssueCodes.WORD_SPECIAL_USE, payload.get('issues'))
 
 
 def save_words_list_classification(words_list):
