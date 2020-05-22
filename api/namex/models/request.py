@@ -305,7 +305,7 @@ class Request(db.Model):
 
         ]
         not_consumed_filters = [
-            cls.expirationDate > func.current_Date(),
+            cls.submittedDate > func.current_Date(),
             Name.corpNum.is_(None),
             Name.consumptionDate.is_(None)
         ]
