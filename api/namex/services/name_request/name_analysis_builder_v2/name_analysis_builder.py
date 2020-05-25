@@ -316,6 +316,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             result.result_code = AnalysisIssueCodes.DESIGNATION_NON_EXISTENT
             result.values = {
                 'list_name': list_name,
+                'existent_designations': all_designations,
                 'correct_designations': all_designations_user
             }
 
@@ -346,6 +347,31 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                 'list_name': list_name,
                 'incorrect_designations': mismatch_entity_designation_list,
                 'correct_designations': all_designations_user,
+            }
+
+        return result
+
+    '''
+    Override the abstract / base class method
+    list_name: original name tokenized by designation. For instance, designation composed of many words is tokenized as one.
+    entity_type_user: Entity type typed by user. 'CR' by default
+    all_designations: All Designations found in name (either misplaced or not)
+    all_designations_user: All designations for the entity type typed by the user. 
+    @return ProcedureResult
+    '''
+
+    def check_designation_more_than_one(self, list_name, designation_end_list, misplaced_designation_end):
+        result = ProcedureResult()
+        result.is_valid = True
+
+        if designation_end_list.__len__() > 0 and misplaced_designation_end.__len__() > 0:
+            correct_end_designations = designation_end_list + (misplaced_designation_end - designation_end_list)
+            #correct_end_designations = list(set(misplaced_designation_end + designation_end_list))
+            result.is_valid = False
+            result.result_code = AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE
+            result.values = {
+                'list_name': list_name,
+                'correct_end_designations': correct_end_designations
             }
 
         return result

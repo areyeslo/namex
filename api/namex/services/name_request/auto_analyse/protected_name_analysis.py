@@ -57,10 +57,14 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # Just take ARMSTRONG PLUMBING LTD. and perform analysis of designations.
         name_first_part = np_svc.name_first_part
 
-        self._designation_any_list = syn_svc.get_designation_any_in_name(name=name_first_part).data
-        self._designation_end_list = syn_svc.get_designation_end_in_name(name=name_first_part).data
+        designation_any_list = syn_svc.get_designation_any_in_name(name=name_first_part).data
+        designation_end_list = syn_svc.get_designation_end_in_name(name=name_first_part).data
 
-        self._all_designations = syn_svc.get_designation_all_in_name(name=name_first_part).data
+        self._designation_any_list = list(map(lambda x: x.upper(), designation_any_list))
+        self._designation_end_list = list(map(lambda x: x.upper(), designation_end_list))
+
+        all_designations = syn_svc.get_designation_all_in_name(name=name_first_part).data
+        self._all_designations = list(map(lambda x: x.upper(), all_designations))
 
     '''
     Set designations in position <end> found any other place in the company name, these designations are misplaced.
@@ -226,13 +230,22 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
             if not check_designation_mismatch.is_valid:
                 results.append(check_designation_mismatch)
 
-            check_designation_misplaced = builder.check_designation_misplaced(
+            check_designation_more_than_one = builder.check_designation_more_than_one(
                 self.get_original_name_tokenized(),
+                self.get_designation_end_list(),
                 self.get_misplaced_designation_end()
             )
 
-            if not check_designation_misplaced.is_valid:
-                results.append(check_designation_misplaced)
+            if not check_designation_more_than_one.is_valid:
+                results.append(check_designation_more_than_one)
+            else:
+                check_designation_misplaced = builder.check_designation_misplaced(
+                    self.get_original_name_tokenized(),
+                    self.get_misplaced_designation_end()
+                )
+
+                if not check_designation_misplaced.is_valid:
+                    results.append(check_designation_misplaced)
 
         check_special_words = builder.check_word_special_use(self.name_tokens, self.get_processed_name())
 

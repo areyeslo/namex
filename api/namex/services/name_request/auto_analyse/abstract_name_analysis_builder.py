@@ -136,18 +136,27 @@ class AbstractNameAnalysisBuilder(GetSynonymsListsMixin, GetDesignationsListsMix
     #    return ProcedureResult(is_valid=True)
 
     '''
-        This method IS abstract and MUST BE IMPLEMENTED in extending Builder classes
-        @return ProcedureResult
-        '''
+    This method IS abstract and MUST BE IMPLEMENTED in extending Builder classes
+    @return ProcedureResult
+    '''
 
     @abc.abstractmethod
     def check_designation_mismatch(self, list_name, entity_type_user, all_designations, all_designations_user):
         return ProcedureResult(is_valid=True)
 
     '''
-        This method IS abstract and MUST BE IMPLEMENTED in extending Builder classes
-        @return ProcedureResult
-        '''
+    This method IS abstract and MUST BE IMPLEMENTED in extending Builder classes
+    @return ProcedureResult
+    '''
+
+    @abc.abstractmethod
+    def check_designation_more_than_one(self, list_name, designation_end_list, misplaced_designation_end):
+        return ProcedureResult(is_valid=True)
+
+    '''
+    This method IS abstract and MUST BE IMPLEMENTED in extending Builder classes
+    @return ProcedureResult
+    '''
 
     @abc.abstractmethod
     def check_designation_misplaced(self, list_name, misplaced_designation_any, misplaced_designation_end, misplaced_designation_all):
