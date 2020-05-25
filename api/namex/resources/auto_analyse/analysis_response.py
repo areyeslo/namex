@@ -13,7 +13,7 @@ from ..auto_analyse.analysis_issues import \
     IncorrectCategory, \
     WordSpecialUse, \
     DesignationMisplacedIssue, \
-    DesignationNonExistentIssue
+    DesignationNonExistentIssue, DesignationMoreThanOneIssue
 
 from namex.services.name_request.auto_analyse import AnalysisIssueCodes, AnalysisResponseCodes
 
@@ -47,6 +47,7 @@ def response_issues(issue_code):
         AnalysisIssueCodes.NAME_REQUIRES_CONSENT: NameRequiresConsentIssue,
         AnalysisIssueCodes.DESIGNATION_NON_EXISTENT: DesignationNonExistentIssue,
         AnalysisIssueCodes.DESIGNATION_MISMATCH: DesignationMismatchIssue,
+        AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE: DesignationMoreThanOneIssue,
         AnalysisIssueCodes.DESIGNATION_MISPLACED: DesignationMisplacedIssue,
         AnalysisIssueCodes.CORPORATE_CONFLICT: CorporateNameConflictIssue,
         AnalysisIssueCodes.WORD_SPECIAL_USE: WordSpecialUse
@@ -326,6 +327,22 @@ class AnalysisResponse:
 
         return issue
 
+    def _build_designation_more_than_one(self, procedure_result, issue_count, issue_idx):
+        option1 = change_designation_order_setup()
+        # Tweak the header
+        option1.header = "Option 1"
+
+        issue = response_issues(procedure_result.result_code)(self, [
+            option1,
+            # option2,
+            # option3
+        ])
+        # Add the procedure to the stack of executed_procedures so we know what issues have been set up
+        self.executed_procedures.append(procedure_result.result_code)
+
+        return issue
+
+
     def _build_designation_misplaced_issue(self, procedure_result, issue_count, issue_idx):
         option1 = change_designation_order_setup()
         # Tweak the header
@@ -452,6 +469,9 @@ class AnalysisResponse:
 
                     if procedure_result.result_code == AnalysisIssueCodes.DESIGNATION_NON_EXISTENT:
                         issue = self._build_non_existent_designation_issue(procedure_result, issue_count, issue_idx)
+
+                    if procedure_result.result_code ==  AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE:
+                        issue = self._build_designation_more_than_one(procedure_result, issue_count, issue_idx)
 
                     if procedure_result.result_code == AnalysisIssueCodes.WORD_SPECIAL_USE:
                         issue = self._build_word_special_use_issue(procedure_result, issue_count, issue_idx)
