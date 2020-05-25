@@ -13,8 +13,6 @@ from .response_objects.name_action import NameAction, NameActions, WordPositions
 from .response_objects.consenting_body import ConsentingBody
 from .response_objects.conflict import Conflict
 
-#from namex.utils.common import remove_periods_designation
-
 
 class AnalysisResponseIssue:
     issue_type = "Issue"  # Maybe get rid of this guy
@@ -26,6 +24,7 @@ class AnalysisResponseIssue:
     '''
     @:param setup_config Setup[]
     '''
+
     def __init__(self, analysis_response, setup_config):
         self.analysis_response = analysis_response
         self.name_tokens = analysis_response.name_tokens
@@ -53,6 +52,7 @@ class AnalysisResponseIssue:
     '''
     @:param setup_config Setup[]
     '''
+
     def set_issue_setups(self, setup_config):
         self.setup_config = setup_config
 
@@ -150,7 +150,8 @@ class AnalysisResponseIssue:
 
         return False, 0, 0, current_processed_token
 
-    def adjust_word_index(self, original_name_str, name_original_tokens, name_tokens, word_idx, offset_designations=True):
+    def adjust_word_index(self, original_name_str, name_original_tokens, name_tokens, word_idx,
+                          offset_designations=True):
         all_designations = self.analysis_response.analysis_service.get_all_designations()
         # all_designations_user = self.analysis_response.analysis_service.get_all_designations_user()
 
@@ -200,7 +201,8 @@ class AnalysisResponseIssue:
                         if offset_designations:
                             # Does the current word have any punctuation associated with?
                             next_char = ''
-                            if len(unprocessed_name_string) > 0 and len(original_tokens) > 0 and unprocessed_name_string[0] == original_tokens[0]:
+                            if len(unprocessed_name_string) > 0 and len(original_tokens) > 0 and \
+                                    unprocessed_name_string[0] == original_tokens[0]:
                                 next_char = original_tokens[0]
 
                             token_is_designation = (current_original_token + next_char) in all_designations
@@ -235,7 +237,8 @@ class AnalysisResponseIssue:
 
         offset_idx = word_idx + word_idx_offset + composite_token_offset
 
-        print('Adjusted word index for word [' + target_word + '] from [' + str(word_idx) + '] -> [' + str(offset_idx) + ']')
+        print('Adjusted word index for word [' + target_word + '] from [' + str(word_idx) + '] -> [' + str(
+            offset_idx) + ']')
 
         return offset_idx, word_idx, word_idx_offset, composite_token_offset
 
@@ -266,10 +269,10 @@ class CheckIsValid(AnalysisResponseIssue):
 Word Classification Engine Issues
 """
 
-
 '''
 @:deprecated
 '''
+
 
 # TODO: Get RID OF THIS!!!
 
@@ -533,7 +536,7 @@ class ContainsWordsToAvoidIssue(AnalysisResponseIssue):
             offset_idx, word_idx, word_idx_offset, composite_token_offset = self.adjust_word_index(
                 self.analysis_response.name_as_submitted,
                 self.analysis_response.name_original_tokens,
-                self.analysis_response.name_tokens, 
+                self.analysis_response.name_tokens,
                 list_name.index(word)
             )
 
@@ -586,7 +589,7 @@ class WordSpecialUse(AnalysisResponseIssue):
             offset_idx, word_idx, word_idx_offset, composite_token_offset = self.adjust_word_index(
                 self.analysis_response.name_as_submitted,
                 self.analysis_response.name_original_tokens,
-                self.analysis_response.name_tokens, 
+                self.analysis_response.name_tokens,
                 list_name.index(word)
             )
 
@@ -641,7 +644,7 @@ class NameRequiresConsentIssue(AnalysisResponseIssue):
             offset_idx, word_idx, word_idx_offset, composite_token_offset = self.adjust_word_index(
                 self.analysis_response.name_as_submitted,
                 self.analysis_response.name_original_tokens,
-                self.analysis_response.name_tokens, 
+                self.analysis_response.name_tokens,
                 list_name.index(word.lower())
             )
 
@@ -682,7 +685,6 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
         list_name = self._lc_list_items(self.analysis_response.name_tokens)
 
         all_designations = self._lc_list_items(self.analysis_response.analysis_service.get_all_designations())
-        #all_combined_designations = all_designations + remove_periods_designation(all_designations)
 
         list_name_as_submitted = self._lc_list_items(self.analysis_response.name_as_submitted_tokenized)
         # Filter out designations from the tokens
@@ -719,7 +721,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
         current_conflict_name = list(list_conflicts.keys())[0]  # eg: 'MOUNTAIN VIEW GROWERS INC.'
         current_corp_num = list_corp_num[0]
         current_consumption_date = list_consumption_date[0]
-        current_conflict = list_conflicts[current_conflict_name]  # eg: {'mountain': ['mountain'], 'view': ['view'], 'growers': ['growers']}
+        current_conflict = list_conflicts[
+            current_conflict_name]  # eg: {'mountain': ['mountain'], 'view': ['view'], 'growers': ['growers']}
         current_conflict_keys = list(current_conflict.keys()) if current_conflict else []
 
         is_exact_match = (list_name == current_conflict_keys)
@@ -777,7 +780,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
                 if composite_token_offset and composite_token_offset > 0:
                     # <class 'list'>: ['mountain', 'view']
                     # Highlight the conflict words
-                    if word in current_conflict_keys and current_conflict_keys.index(word) != current_conflict_keys.index(current_conflict_keys[-1]):
+                    if word in current_conflict_keys and current_conflict_keys.index(
+                            word) != current_conflict_keys.index(current_conflict_keys[-1]):
                         issue.name_actions.append(NameAction(
                             word=word,
                             index=offset_idx,
@@ -785,7 +789,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
                         ))
 
                     # Strike out the last matching word
-                    if word in current_conflict_keys and current_conflict_keys.index(word) == current_conflict_keys.index(current_conflict_keys[-1]):
+                    if word in current_conflict_keys and current_conflict_keys.index(
+                            word) == current_conflict_keys.index(current_conflict_keys[-1]):
                         issue.name_actions.append(NameAction(
                             word=word,
                             index=offset_idx,
@@ -793,7 +798,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
                         ))
                 else:
                     # Highlight the conflict words
-                    if word in current_conflict_keys and current_conflict_keys.index(word) != current_conflict_keys.index(current_conflict_keys[-1]):
+                    if word in current_conflict_keys and current_conflict_keys.index(
+                            word) != current_conflict_keys.index(current_conflict_keys[-1]):
                         issue.name_actions.append(NameAction(
                             word=word,
                             index=offset_idx,
@@ -801,7 +807,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
                         ))
 
                     # Strike out the last matching word
-                    if word in current_conflict_keys and current_conflict_keys.index(word) == current_conflict_keys.index(current_conflict_keys[-1]):
+                    if word in current_conflict_keys and current_conflict_keys.index(
+                            word) == current_conflict_keys.index(current_conflict_keys[-1]):
                         issue.name_actions.append(NameAction(
                             word=word,
                             index=offset_idx,
@@ -813,8 +820,8 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
         conflict = Conflict(
             name=current_conflict_name,
             date=date.today(),
-            corp_num= current_corp_num,
-            consumption_date= current_consumption_date
+            corp_num=current_corp_num,
+            consumption_date=current_consumption_date
         )
 
         issue.conflicts.append(conflict)
@@ -942,6 +949,62 @@ class DesignationMismatchIssue(AnalysisResponseIssue):
         return issue
 
 
+class DesignationMoreThanOneIssue(AnalysisResponseIssue):
+    issue_type = AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE
+    status_text = "Further Action Required"
+    issue = None
+
+    def create_issue(self, procedure_result):
+        list_name_incl_designation = self.analysis_response.name_original_tokens
+        correct_end_designations = procedure_result.values['correct_end_designations']
+
+        correct_end_designations_lc = self._lc_list_items(correct_end_designations, True)
+        list_name_incl_designation_lc = self._lc_list_items(list_name_incl_designation)
+
+        issue = NameAnalysisIssue(
+            issue_type=self.issue_type,
+            line1="The " + self._join_list_words(
+                correct_end_designations_lc) + " designations must be at the end of the name. Please choose one of them.",
+            line2=None,
+            consenting_body=None,
+            designations=correct_end_designations,
+            show_reserve_button=False,
+            show_examination_button=False,
+            conflicts=None,
+            setup=None,
+            name_actions=[]
+        )
+
+        # Loop over the list_name words, we need to decide to do with each word
+        for word in list_name_incl_designation_lc:
+            offset_idx, word_idx, word_idx_offset, composite_token_offset = self.adjust_word_index(
+                self.analysis_response.name_as_submitted,
+                self.analysis_response.name_original_tokens,
+                list_name_incl_designation_lc,
+                list_name_incl_designation.index(word),
+                False
+            )
+
+            # Highlight the issues
+            if word in correct_end_designations_lc:
+                issue.name_actions.append(NameAction(
+                    word=word,
+                    index=offset_idx,
+                    type=NameActions.HIGHLIGHT
+                ))
+
+        # Setup boxes
+        issue.setup = self.setup_config
+        for setup_item in issue.setup:
+            # Loop over properties
+            for prop in vars(setup_item):
+                if isinstance(setup_item.__dict__[prop], Template):
+                    # Render the Template string, replacing placeholder vars
+                    setattr(setup_item, prop, setup_item.__dict__[prop].safe_substitute([]))
+
+        return issue
+
+
 class DesignationMisplacedIssue(AnalysisResponseIssue):
     issue_type = AnalysisIssueCodes.DESIGNATION_MISPLACED
     status_text = "Further Action Required"
@@ -967,7 +1030,6 @@ class DesignationMisplacedIssue(AnalysisResponseIssue):
             setup=None,
             name_actions=[]
         )
-
 
         # Loop over the list_name words, we need to decide to do with each word
         for word in list_name_incl_designation_lc:
