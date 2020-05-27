@@ -57,8 +57,8 @@ class AnalysisResponseIssue:
         self.setup_config = setup_config
 
     @classmethod
-    def _join_list_words(cls, list_words):
-        return "<b>" + ", ".join(list_words) + "</b>"
+    def _join_list_words(cls, list_words, separator=", "):
+        return "<b>" + separator.join(list_words) + "</b>"
 
     # Johnson & Johnson Engineering will return original tokens:
     # [Johnson, &, Johnson, Engineering]
@@ -963,8 +963,8 @@ class DesignationMoreThanOneIssue(AnalysisResponseIssue):
 
         issue = NameAnalysisIssue(
             issue_type=self.issue_type,
-            line1="The " + self._join_list_words(
-                correct_end_designations_lc) + " designations must be at the end of the name. Please choose one of them.",
+            line1="There can be only one designation. You must choose either " + self._join_list_words(
+                correct_end_designations_lc, "</b>  or  <b>"),
             line2=None,
             consenting_body=None,
             designations=correct_end_designations,
