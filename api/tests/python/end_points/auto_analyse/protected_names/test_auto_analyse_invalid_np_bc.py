@@ -123,7 +123,7 @@ def assert_additional_conflict_parameters(issue_type, issues):
     is_correct = False
     for issue in issues:
         is_correct = True if issue.get('issue_type') == issue_type.value and (
-        value['corp_num'] and value['consumption_date'] for value in issue.get('conflicts')) else False
+            value['corp_num'] and value['consumption_date'] for value in issue.get('conflicts')) else False
 
     assert is_correct is True
 
@@ -1075,7 +1075,37 @@ def test_designation_more_than_one_correct_request_response(client, jwt, app):
 
     test_params = [
         {
-            'name': 'ARMSTRONG PLUMBING COOP',
+            'name': 'LTD. ARMSTRONG CORPORATION PLUMBING  INC.',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'ARMSTRONG LTD. CORPORATION PLUMBING  INC.',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'ARMSTRONG LTD. CORPORATION INC. PLUMBING',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'LTD. COOP ARMSTRONG L.L.C. CORPORATION PLUMBING  L.L.P INC.',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION L.L.P INC. PLUMBING  ',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION L.L.P PLUMBING INC.',
             'location': 'BC',
             'entity_type': 'CR',
             'request_action': 'NEW'
@@ -1088,6 +1118,12 @@ def test_designation_more_than_one_correct_request_response(client, jwt, app):
         },
         {
             'name': 'ARMSTRONG PLUMBING LTD. INC. CORPORATION',
+            'location': 'BC',
+            'entity_type': 'CR',
+            'request_action': 'NEW'
+        },
+        {
+            'name': 'ARMSTRONG LIMITED LIABILITY COMPANY PLUMBING COOP LIMITED INC. CORPORATION',
             'location': 'BC',
             'entity_type': 'CR',
             'request_action': 'NEW'
