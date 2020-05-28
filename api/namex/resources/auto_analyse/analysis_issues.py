@@ -981,7 +981,7 @@ class DesignationMoreThanOneIssue(AnalysisResponseIssue):
                 self.analysis_response.name_as_submitted,
                 self.analysis_response.name_original_tokens,
                 list_name_incl_designation_lc,
-                list_name_incl_designation.index(word),
+                list_name_incl_designation_lc.index(word),
                 False
             )
 

@@ -57,14 +57,10 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # Just take ARMSTRONG PLUMBING LTD. and perform analysis of designations.
         name_first_part = np_svc.name_first_part
 
-        designation_any_list = syn_svc.get_designation_any_in_name(name=name_first_part).data
-        designation_end_list = syn_svc.get_designation_end_in_name(name=name_first_part).data
+        self._designation_any_list = syn_svc.get_designation_any_in_name(name=name_first_part).data
+        self._designation_end_list = syn_svc.get_designation_end_in_name(name=name_first_part).data
 
-        self._designation_any_list = list(map(lambda x: x.upper(), designation_any_list))
-        self._designation_end_list = list(map(lambda x: x.upper(), designation_end_list))
-
-        all_designations = syn_svc.get_designation_all_in_name(name=name_first_part).data
-        self._all_designations = list(map(lambda x: x.upper(), all_designations))
+        self._all_designations = syn_svc.get_designation_all_in_name(name=name_first_part).data
 
     '''
     Set designations in position <end> found any other place in the company name, these designations are misplaced.
@@ -73,7 +69,7 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
     def _set_designations_incorrect_position_by_input_name(self):
         syn_svc = self.synonym_service
         tokenized_name = self.get_original_name_tokenized()
-        #correct_designation_end_list = remove_periods_designation(self._designation_end_list_correct)
+
         correct_designation_end_list = self._designation_end_list_correct
 
         designation_end_misplaced_list = syn_svc.get_incorrect_designation_end_in_name(tokenized_name=tokenized_name,
@@ -176,9 +172,6 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
         # Set all designations based on entity type typed by user,'CR' by default
         self._all_designations_user = self._eng_designation_all_list_correct + self._fr_designation_all_list_correct
 
-        #self._all_designations_user_no_periods = remove_periods_designation(self._all_designations_user)
-        #self._all_designations_user_no_periods.sort(key=len, reverse=True)
-
     '''
     do_analysis is an abstract method inherited from NameAnalysisDirector must be implemented.
     This is the main execution call for running name analysis checks.
@@ -224,7 +217,6 @@ class ProtectedNameAnalysisService(NameAnalysisDirector):
                 self.entity_type,
                 self.get_all_designations(),
                 self.get_all_designations_user()
-                #self.get_all_designations_user_no_periods()
             )
 
             if not check_designation_mismatch.is_valid:
