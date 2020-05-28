@@ -73,7 +73,8 @@ def assert_issue_type_is_one_of(types, issue):
 def assert_has_issue_type(issue_type, issues):
     has_issue = False
     for issue in issues:
-        has_issue = True if issue.get('issue_type') == issue_type.value else False
+        if issue.get('issue_type') == issue_type.value:
+            has_issue = True
 
     assert has_issue is True
 
@@ -82,7 +83,8 @@ def assert_has_issue_type(issue_type, issues):
 def assert_not_has_issue_type(issue_type, issues):
     has_issue = False
     for issue in issues:
-        has_issue = True if issue.get('issue_type') == issue_type.value else False
+        if issue.get('issue_type') == issue_type.value:
+            has_issue = True
 
     assert has_issue is False
 
@@ -1093,19 +1095,19 @@ def test_designation_more_than_one_correct_request_response(client, jwt, app):
             'request_action': 'NEW'
         },
         {
-            'name': 'LTD. COOP ARMSTRONG L.L.C. CORPORATION PLUMBING  L.L.P INC.',
+            'name': 'LTD. COOP ARMSTRONG L.L.C. CORPORATION PLUMBING CCC INC.',
             'location': 'BC',
             'entity_type': 'CR',
             'request_action': 'NEW'
         },
         {
-            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION L.L.P INC. PLUMBING  ',
+            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION LLP INC. PLUMBING  ',
             'location': 'BC',
             'entity_type': 'CR',
             'request_action': 'NEW'
         },
         {
-            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION L.L.P PLUMBING INC.',
+            'name': 'ARMSTRONG LTD. COOP L.L.C. CORPORATION LLP PLUMBING INC.',
             'location': 'BC',
             'entity_type': 'CR',
             'request_action': 'NEW'
@@ -1142,8 +1144,6 @@ def test_designation_more_than_one_correct_request_response(client, jwt, app):
             assert_issues_count_is_gt(0, payload.get('issues'))
             assert_has_issue_type(AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE, payload.get('issues'))
             assert_not_has_issue_type(AnalysisIssueCodes.DESIGNATION_MISPLACED, payload.get('issues'))
-
-
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -1290,7 +1290,7 @@ def test_designation_misplaced_request_response(client, jwt, app):
 def test_name_use_special_words_request_response(client, jwt, app):
     words_list_classification = [{'word': 'BC', 'classification': 'DIST'},
                                  {'word': 'BC', 'classification': 'DESC'},
-                                 #{'word': '468040', 'classification': 'DIST'},
+                                 # {'word': '468040', 'classification': 'DIST'},
                                  {'word': 'COAST', 'classification': 'DIST'},
                                  {'word': 'COAST', 'classification': 'DESC'},
                                  {'word': 'TREASURY', 'classification': 'DISC'},
