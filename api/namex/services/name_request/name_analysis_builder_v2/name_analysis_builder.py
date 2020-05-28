@@ -364,13 +364,13 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
         result = ProcedureResult()
         result.is_valid = True
 
-        if designation_end_list.__len__() > 0 or misplaced_designation_end.__len__() > 0:
+        if designation_end_list.__len__() > 1 or misplaced_designation_end.__len__() > 1:
             correct_end_designations = designation_end_list + list(set(misplaced_designation_end) - set(designation_end_list))
             corrected_end_designations_sorted = []
 
             for word in list_name:
-                if word.upper() in correct_end_designations:
-                    corrected_end_designations_sorted.append(word.upper())
+                if word in correct_end_designations:
+                    corrected_end_designations_sorted.append(word)
 
             result.is_valid = False
             result.result_code = AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE
