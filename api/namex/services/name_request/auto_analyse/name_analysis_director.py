@@ -322,6 +322,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
                 AnalysisIssueCodes.NAME_REQUIRES_CONSENT,
                 AnalysisIssueCodes.CORPORATE_CONFLICT,
                 AnalysisIssueCodes.DESIGNATION_NON_EXISTENT,
+                AnalysisIssueCodes.DESIGNATION_MORE_THAN_ONE,
                 AnalysisIssueCodes.DESIGNATION_MISPLACED,
                 AnalysisIssueCodes.DESIGNATION_MISMATCH
             ]
