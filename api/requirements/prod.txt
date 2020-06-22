@@ -17,7 +17,7 @@ cx_Oracle
 pronouncing
 requests
 toolz
-nltk==3.4.5
+porter2stemmer
 werkzeug==0.16.1
 pysolr
 pattern

@@ -1,3 +1,3 @@
-from nltk.stem import PorterStemmer
+from porter2stemmer import Porter2Stemmer
 
-porter = PorterStemmer()
+porter = Porter2Stemmer()
