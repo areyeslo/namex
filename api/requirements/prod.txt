@@ -17,10 +17,7 @@ cx_Oracle
 pronouncing
 requests
 toolz
-<<<<<<< Updated upstream
-=======
 inflect
->>>>>>> Stashed changes
 porter2stemmer
 werkzeug==0.16.1
 pysolr
