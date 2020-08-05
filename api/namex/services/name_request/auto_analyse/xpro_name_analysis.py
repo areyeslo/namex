@@ -120,8 +120,8 @@ class XproNameAnalysisService(NameAnalysisDirector, SetDesignationsListsMixin):
                 AnalysisIssueCodes.CONTAINS_UNCLASSIFIABLE_WORD,
                 AnalysisIssueCodes.WORD_SPECIAL_USE,
                 AnalysisIssueCodes.NAME_REQUIRES_CONSENT,
-                AnalysisIssueCodes.QUEUE_CONFLICT,
                 AnalysisIssueCodes.CORPORATE_CONFLICT,
+                AnalysisIssueCodes.QUEUE_CONFLICT
                 # We don't need to check for designations, so we're skipping those codes here..
             ]
 
