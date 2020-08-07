@@ -1,8 +1,10 @@
+import json
 from urllib.parse import unquote_plus
 
-from flask import request, make_response, jsonify
+from flask import request, jsonify
 
 from namex.services.statistics.wait_time_statistics import WaitTimeStatsService
+from namex.services.exceptions import ApiServiceException
 from namex.utils.logging import setup_logging
 from flask_restplus import Namespace, Resource, cors, fields
 from flask_jwt_oidc import AuthError
@@ -10,6 +12,7 @@ from flask_jwt_oidc import AuthError
 from http import HTTPStatus
 
 from namex.utils.util import cors_preflight
+from namex.utils.api_resource import log_error, handle_exception, get_query_param_str
 
 setup_logging()  # important to do this first
 
@@ -29,7 +32,7 @@ def handle_auth_error(ex):
 
 
 @cors_preflight('GET')
-@api.route('/', strict_slashes=False, methods=['GET''OPTIONS'])
+@api.route('/', strict_slashes=False, methods=['GET', 'OPTIONS'])
 class WaitTimeStats(Resource):
     @staticmethod
     @cors.crossdomain(origin='*')
@@ -37,17 +40,20 @@ class WaitTimeStats(Resource):
         'priority': 'Requests priority [Y/N]'
     })
     def get():
-        priority = unquote_plus(request.args.get('priority').strip()) if request.args.get('priority') else None
+        priority_str = get_query_param_str('priority')
+        is_priority = True if priority_str and priority_str.lower() == 'y' else False
         try:
             service = WaitTimeStatsService()
-            entity = service.calculate_examination_rate(priority)
+            entity = service.calculate_examination_rate(is_priority)
 
             if not entity:
-                raise ValueError('WaitTimeStatsService did not return a result')
+                raise ApiServiceException(message='WaitTimeStatsService did not return a result')
 
-            return HTTPStatus.OK
+            return jsonify(json.loads(entity))
 
         except ValueError as err:
-            return jsonify('Wait time stats not found: ' + repr(err)), HTTPStatus.NOT_FOUND
+            return jsonify('Wait time stats not found: ' + repr(err)), 200
+        except ApiServiceException as err:
+            return handle_exception(err, err.message, 400)
         except Exception as err:
-            return jsonify('Internal server error: ' + repr(err)), HTTPStatus.INTERNAL_SERVER_ERROR
+            return jsonify('Internal Server Error\n' + repr(err)), 500

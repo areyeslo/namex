@@ -26,7 +26,7 @@ class Event(db.Model):
     # relationships
     stateCd = db.Column('state_cd', db.String(20), db.ForeignKey('states.cd'))
     state = db.relationship('State', backref=backref('state_events', uselist=False), foreign_keys=[stateCd])
-    nrId = db.Column('nr_id', db.Integer, db.ForeignKey('requests.id'))
+    nrId = db.Column('nrId', db.Integer, db.ForeignKey('requests.id'))
     request = db.relationship('Request', backref=backref('request_events', uselist=False), foreign_keys=[nrId])
     userId = db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref=backref('user_events', uselist=False), foreign_keys=[userId])
@@ -56,34 +56,47 @@ class Event(db.Model):
     def delete_from_db(self):
         raise BusinessException()
 
-
     @classmethod
     def get_put_records(cls, priority):
-        put_records = db.ession.query(Event.nr_id, func.max(Event.event_dt).label('event_dt_final')).join(
-            Request, and_(Event.nr_id == Request.id)).filter(
+        # TODO: Fix this there is no event_dt in the Event class...
+        """
+        put_records = db.session.query(Event.nrId, func.max(Event.event_dt).label('event_dt_final')).join(
+            Request, and_(Event.nrId == Request.id)).filter(
             Event.action == EventAction.PUT.value,
             Request.priority_cd == priority,
             Event.state_cd.in_([EventState.APPROVED.value, EventState.REJECTED.value, EventState.CONDITIONAL.value]),
             Event.event_dt < func.now()
-        ).group_by(Event.nr_id).subquery()
+        ).group_by(Event.nrId).subquery()
+        """
+
+        put_records = db.session.query(Event).group_by(Event.nrId).subquery()
 
         return put_records
 
     @classmethod
     def get_update_put_records(cls, put_records):
-        update_from_put_records = db.session.query(Event.nr_id,
+        # TODO: Fix this there is no event_dt_final in the put_records.c
+        """
+        :param put_records:
+        :return:
+        update_from_put_records = db.session.query(Event.nrId,
                                                    func.max(put_records.c.event_dt_final).label('event_dt_final'),
                                                    func.min(Event.event_dt).label('event_dt_start')).join(
             put_records,
-            Event.nr_id == put_records.c.nr_id).filter(
+            Event.nrId == put_records.c.nrId).filter(
             Event.action == EventAction.UPDATE.value,
             ~Event.state_cd.in_([EventState.CANCELLED.value])).group_by(
-            Event.nr_id).subquery()
+            Event.nrId).subquery()
+        """
+
+        update_from_put_records = db.session.query(Event).group_by(
+            Event.nrId).subquery()
 
         return update_from_put_records
 
     @classmethod
     def get_examination_rate(cls, update_from_put_records):
+        # TODO: This has issues too....
         examination_rate = db.session.query(func.round(
             func.avg(
                 case([

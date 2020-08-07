@@ -7,6 +7,7 @@ from namex.models import State, User
 from namex.services import ServicesError
 
 
+# TODO: Strip these utils out, they are being moved up a level to namex.utils
 def log_error(msg, err):
     return msg.format(err)
 
@@ -35,6 +36,7 @@ def query_results_to_dict(results):
     :return:
     """
     return list(map(lambda result: query_result_to_dict(result), results))
+# TODO: End of utils to strip out, see comment above
 
 
 nr_regex = r'^(NR\ ?L{0,1}|L{0,1})?([\d]{6,8})$'
