@@ -131,7 +131,6 @@ EntityTypeDescriptions = {
     EntityTypes.FIRM: 'FIRM (Legacy Oracle)'
 }
 
-
 '''
 Sole Proprietorship
 Doing Business As
@@ -428,3 +427,15 @@ class NROChangeFlags(AbstractEnum):
     NWPTA_SK = 'is_changed__nwpta_sk'
     CONSENT = 'is_changed__consent'
     STATE = 'is_changed__request_state'
+
+
+class EventState(AbstractEnum):
+    APPROVED = 'APPROVED'
+    REJECTED = 'REJECTED'
+    CONDITIONAL = 'CONDITIONAL'
+    CANCELLED = 'CANCELLED'
+
+
+class EventAction(AbstractEnum):
+    UPDATE = 'update_from_nro'
+    PUT = 'put'
