@@ -26,7 +26,7 @@ class Event(db.Model):
     # relationships
     stateCd = db.Column('state_cd', db.String(20), db.ForeignKey('states.cd'))
     state = db.relationship('State', backref=backref('state_events', uselist=False), foreign_keys=[stateCd])
-    nrId = db.Column('nrId', db.Integer, db.ForeignKey('requests.id'))
+    nrId = db.Column('nr_id', db.Integer, db.ForeignKey('requests.id'))
     request = db.relationship('Request', backref=backref('request_events', uselist=False), foreign_keys=[nrId])
     userId = db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref=backref('user_events', uselist=False), foreign_keys=[userId])
@@ -43,7 +43,8 @@ class Event(db.Model):
     VALID_ACTIONS = [GET, PUT, PATCH, POST, DELETE]
 
     def json(self):
-        return {"id": self.id, "eventDate": self.eventDate, "action": self.action, "stateCd": self.stateCd, "jsonData": self.eventJson,
+        return {"id": self.id, "eventDate": self.eventDate, "action": self.action, "stateCd": self.stateCd,
+                "jsonData": self.eventJson,
                 "requestId": self.nrId, "userId": self.userId}
 
     def save_to_db(self):
@@ -58,81 +59,63 @@ class Event(db.Model):
 
     @classmethod
     def get_put_records(cls, priority):
-        # TODO: Fix this there is no event_dt in the Event class...
-        """
-        put_records = db.session.query(Event.nrId, func.max(Event.event_dt).label('event_dt_final')).join(
+        put_records = db.session.query(Event.nrId.label('nrId'), func.max(cls.eventDate).label('eventDateFinal')).join(
             Request, and_(Event.nrId == Request.id)).filter(
-            Event.action == EventAction.PUT.value,
-            Request.priority_cd == priority,
-            Event.state_cd.in_([EventState.APPROVED.value, EventState.REJECTED.value, EventState.CONDITIONAL.value]),
-            Event.event_dt < func.now()
+            cls.action == EventAction.PUT.value,
+            Request.priorityCd == priority.value,
+            cls.stateCd.in_([EventState.APPROVED.value, EventState.REJECTED.value, EventState.CONDITIONAL.value]),
+            cls.eventDate < func.now()
         ).group_by(Event.nrId).subquery()
-        """
-
-        put_records = db.session.query(Event).group_by(Event.nrId).subquery()
 
         return put_records
 
     @classmethod
     def get_update_put_records(cls, put_records):
-        # TODO: Fix this there is no event_dt_final in the put_records.c
-        """
-        :param put_records:
-        :return:
         update_from_put_records = db.session.query(Event.nrId,
-                                                   func.max(put_records.c.event_dt_final).label('event_dt_final'),
-                                                   func.min(Event.event_dt).label('event_dt_start')).join(
+                                                   func.max(put_records.c.eventDateFinal).label('eventDateFinal'),
+                                                   func.min(Event.eventDate).label('eventDateStart')).join(
             put_records,
             Event.nrId == put_records.c.nrId).filter(
             Event.action == EventAction.UPDATE.value,
-            ~Event.state_cd.in_([EventState.CANCELLED.value])).group_by(
-            Event.nrId).subquery()
-        """
-
-        update_from_put_records = db.session.query(Event).group_by(
+            ~Event.stateCd.in_([EventState.CANCELLED.value])).group_by(
             Event.nrId).subquery()
 
         return update_from_put_records
 
     @classmethod
     def get_examination_rate(cls, update_from_put_records):
-        # TODO: This has issues too....
         examination_rate = db.session.query(func.round(
             func.avg(
                 case([
-                    (update_from_put_records.c.event_dt_final >
-                     update_from_put_records.c.event_dt_start,
-                     func.round((func.extract('epoch',
-                                              update_from_put_records.c.event_dt_final) -
-                                 func.extract('epoch',
-                                              update_from_put_records.c.event_dt_start)) / 60))
+                    (update_from_put_records.c.eventDateFinal > update_from_put_records.c.eventDateStart,
+                     func.round((func.extract('epoch', update_from_put_records.c.eventDateFinal) -
+                                 func.extract('epoch', update_from_put_records.c.eventDateStart)) / 60))
                 ])
             )
         ).label('Minutes'),
                                             func.round(
                                                 func.avg(
                                                     case([
-                                                        (update_from_put_records.c.event_dt_final >
-                                                         update_from_put_records.c.event_dt_start,
+                                                        (update_from_put_records.c.eventDateFinal >
+                                                         update_from_put_records.c.eventDateStart,
                                                          func.round((func.extract('epoch',
-                                                                                  update_from_put_records.c.event_dt_final) -
+                                                                                  update_from_put_records.c.eventDateFinal) -
                                                                      func.extract('epoch',
-                                                                                  update_from_put_records.c.event_dt_start)) / 3600))
+                                                                                  update_from_put_records.c.eventDateStart)) / 3600))
                                                     ])
                                                 )
                                             ).label('Hours'),
                                             func.round(
                                                 func.avg(
                                                     case([
-                                                        (update_from_put_records.c.event_dt_final >
-                                                         update_from_put_records.c.event_dt_start,
+                                                        (update_from_put_records.c.eventDateFinal >
+                                                         update_from_put_records.c.eventDateStart,
                                                          func.round((func.extract('epoch',
-                                                                                  update_from_put_records.c.event_dt_final) -
+                                                                                  update_from_put_records.c.eventDateFinal) -
                                                                      func.extract('epoch',
-                                                                                  update_from_put_records.c.event_dt_start)) / 86400))
+                                                                                  update_from_put_records.c.eventDateStart)) / 86400))
                                                     ])
                                                 )
                                             ).label('Days'),
                                             ).all()
         return examination_rate
-
