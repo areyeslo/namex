@@ -118,4 +118,10 @@ class Event(db.Model):
                                                 )
                                             ).label('Days'),
                                             ).all()
-        return examination_rate
+        response= Event().get_examination_rate_response(examination_rate)
+        return response
+
+    def get_examination_rate_response(cls, examination_rate):
+        examination_rate_dict = {'minutes':int(examination_rate[0][0]), 'hours':int(examination_rate[0][1]), 'days': int(examination_rate[0][2])}
+
+        return examination_rate_dict

@@ -44,12 +44,12 @@ class WaitTimeStats(Resource):
         is_priority = True if priority_str and priority_str.lower() == 'y' else False
         try:
             service = WaitTimeStatsService()
-            entity = service.calculate_examination_rate(is_priority)
+            response = service.calculate_examination_rate(is_priority)
 
-            if not entity:
+            if not response:
                 raise ApiServiceException(message='WaitTimeStatsService did not return a result')
 
-            return jsonify(json.loads(entity))
+            return jsonify(response),HTTPStatus.OK
 
         except ValueError as err:
             return jsonify('Wait time stats not found: ' + repr(err)), 200
