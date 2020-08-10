@@ -59,13 +59,14 @@ class Event(db.Model):
 
     @classmethod
     def get_put_records(cls, priority):
-        put_records = db.session.query(Event.nrId.label('nrId'), func.max(cls.eventDate).label('eventDateFinal')).join(
-            Request, and_(Event.nrId == Request.id)).filter(
-            cls.action == EventAction.PUT.value,
-            Request.priorityCd == priority.value,
-            cls.stateCd.in_([EventState.APPROVED.value, EventState.REJECTED.value, EventState.CONDITIONAL.value]),
-            cls.eventDate < func.now()
-        ).group_by(Event.nrId).subquery()
+        put_records = db.session.query(Event.nrId.label('nrId'),
+                                       func.max(cls.eventDate).label('eventDateFinal')). \
+            join(Request, and_(Event.nrId == Request.id)). \
+            filter(cls.action == EventAction.PUT.value,
+                   Request.priorityCd == priority.value,
+                   cls.stateCd.in_([EventState.APPROVED.value, EventState.REJECTED.value, EventState.CONDITIONAL.value]),
+                   cls.eventDate < func.now()).\
+            group_by(Event.nrId).subquery()
 
         return put_records
 
@@ -73,12 +74,11 @@ class Event(db.Model):
     def get_update_put_records(cls, put_records):
         update_from_put_records = db.session.query(Event.nrId,
                                                    func.max(put_records.c.eventDateFinal).label('eventDateFinal'),
-                                                   func.min(Event.eventDate).label('eventDateStart')).join(
-            put_records,
-            Event.nrId == put_records.c.nrId).filter(
-            Event.action == EventAction.UPDATE.value,
-            ~Event.stateCd.in_([EventState.CANCELLED.value])).group_by(
-            Event.nrId).subquery()
+                                                   func.min(Event.eventDate).label('eventDateStart')).\
+            join(put_records, Event.nrId == put_records.c.nrId).\
+            filter(Event.action == EventAction.UPDATE.value,
+                   ~Event.stateCd.in_([EventState.CANCELLED.value])).\
+            group_by(Event.nrId).subquery()
 
         return update_from_put_records
 
@@ -91,37 +91,35 @@ class Event(db.Model):
                      func.round((func.extract('epoch', update_from_put_records.c.eventDateFinal) -
                                  func.extract('epoch', update_from_put_records.c.eventDateStart)) / 60))
                 ])
-            )
-        ).label('Minutes'),
+            )).label('Minutes'),
                                             func.round(
                                                 func.avg(
                                                     case([
-                                                        (update_from_put_records.c.eventDateFinal >
-                                                         update_from_put_records.c.eventDateStart,
-                                                         func.round((func.extract('epoch',
-                                                                                  update_from_put_records.c.eventDateFinal) -
-                                                                     func.extract('epoch',
-                                                                                  update_from_put_records.c.eventDateStart)) / 3600))
+                                                        (
+                                                        update_from_put_records.c.eventDateFinal > update_from_put_records.c.eventDateStart,
+                                                        func.round((func.extract('epoch',
+                                                                                 update_from_put_records.c.eventDateFinal) -
+                                                                    func.extract('epoch',
+                                                                                 update_from_put_records.c.eventDateStart)) / 3600))
                                                     ])
-                                                )
-                                            ).label('Hours'),
+                                                )).label('Hours'),
                                             func.round(
                                                 func.avg(
                                                     case([
-                                                        (update_from_put_records.c.eventDateFinal >
-                                                         update_from_put_records.c.eventDateStart,
-                                                         func.round((func.extract('epoch',
-                                                                                  update_from_put_records.c.eventDateFinal) -
-                                                                     func.extract('epoch',
-                                                                                  update_from_put_records.c.eventDateStart)) / 86400))
+                                                        (
+                                                        update_from_put_records.c.eventDateFinal > update_from_put_records.c.eventDateStart,
+                                                        func.round((func.extract('epoch',
+                                                                                 update_from_put_records.c.eventDateFinal) -
+                                                                    func.extract('epoch',
+                                                                                 update_from_put_records.c.eventDateStart)) / 86400))
                                                     ])
-                                                )
-                                            ).label('Days'),
+                                                )).label('Days'),
                                             ).all()
-        response= Event().get_examination_rate_response(examination_rate)
+        response = Event().get_examination_rate_response(examination_rate)
         return response
 
     def get_examination_rate_response(cls, examination_rate):
-        examination_rate_dict = {'minutes':int(examination_rate[0][0]), 'hours':int(examination_rate[0][1]), 'days': int(examination_rate[0][2])}
+        examination_rate_dict = {'minutes': int(examination_rate[0][0]), 'hours': int(examination_rate[0][1]),
+                                 'days': int(examination_rate[0][2])}
 
         return examination_rate_dict
