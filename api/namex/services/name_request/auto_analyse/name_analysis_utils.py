@@ -145,10 +145,10 @@ def check_numbers_beginning(syn_svc, tokens):
     return tokens
 
 
-def check_synonyms(syn_svc, list_dist_words, list_desc_words):
+def check_synonyms(syn_svc, stand_alone_words, list_dist_words, list_desc_words):
     both_list = list(set(list_dist_words) & set(list_desc_words))
     for word in both_list:
-        if syn_svc.get_word_synonyms(word=word).data:
+        if syn_svc.get_word_synonyms(word=word).data or porter.stem(word.lower()) in stand_alone_words:
             list_dist_words.remove(word)
         else:
             list_desc_words.remove(word)
@@ -182,7 +182,7 @@ def get_conflicts_same_classification(builder, name_tokens, processed_name, list
     return check_conflicts
 
 
-def get_classification(service, syn_svc, match, wc_svc, token_svc):
+def get_classification(service, syn_svc, match, wc_svc, token_svc, np_svc):
     service.token_classifier = wc_svc.classify_tokens(match)
     service._list_dist_words, service._list_desc_words, service._list_none_words = service.word_classification_tokens
 
@@ -196,6 +196,7 @@ def get_classification(service, syn_svc, match, wc_svc, token_svc):
             )
 
     service._list_dist_words, service._list_desc_words = check_synonyms(syn_svc,
+                                                                        np_svc.get_stand_alone_words(),
                                                                         service.get_list_dist(),
                                                                         service.get_list_desc())
 

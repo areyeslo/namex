@@ -260,12 +260,13 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             syn_svc = self.synonym_service
             wc_svc = self.word_classification_service
             token_svc = self.token_classifier_service
+            np_svc = self._name_processing_service
 
             analysis = []
 
             # Configure the analysis for the supplied builder
             #self.configure_analysis()
-            get_classification(self, syn_svc, self.name_tokens, wc_svc, token_svc)
+            get_classification(self, syn_svc, self.name_tokens, wc_svc, token_svc, np_svc)
 
             check_words_to_avoid = builder.check_words_to_avoid(self.name_tokens, self.processed_name)
             if not check_words_to_avoid.is_valid:
