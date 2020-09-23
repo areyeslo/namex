@@ -470,7 +470,8 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                                                                  dist_substitution_dict)
                     similarity_dist = round(self.get_similarity(vector1_dist, vector2_dist, entropy_dist), 2)
 
-                    vector2_desc, entropy_desc = self.get_vector(remove_spaces_list(service.get_list_desc()), list_desc, desc_synonym_dict)
+                    vector2_desc, entropy_desc = self.get_vector(remove_spaces_list(service.get_list_desc()), list_desc,
+                                                                 desc_synonym_dict)
                     similarity_desc = round(
                         self.get_similarity(vector1_desc, vector2_desc, entropy_desc), 2)
 
@@ -716,7 +717,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     def get_compound_distinctives(self, dict_dist):
         list_dict = list(dict_dist.keys())
 
-        list_dist_compound= list()
+        list_dist_compound = list()
         for i in range(2, len(list_dict)):
             list_dist_compound.extend(subsequences(list_dict, i))
 
@@ -745,7 +746,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     def get_compound_distinctive_hybrid(self, dist_substitution_dict, dict_descriptive, list_name):
         dict_compound_dist, dict_desc = {}, {}
 
-        if dict_descriptive.__len__() > 1 and dist_substitution_dict.__len__() >0:
+        if dict_descriptive.__len__() > 1 and dist_substitution_dict.__len__() > 0:
             dict_desc = dict(dict_descriptive)
             for key_dist, value in sorted(list(dist_substitution_dict.items()), key=lambda x: x[0].lower(),
                                           reverse=True):
