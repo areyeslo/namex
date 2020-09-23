@@ -54,6 +54,8 @@ def test_add_descriptive_word_both_classifications_request_response(client, jwt,
         #     'entity_type_cd': 'CR',
         #     'request_action_cd': 'NEW'
         # },
+        # This name is not valid for this category:
+        # {'sewing': 'DESC', 'service': 'DIST'}
         {
             'name': 'SEWING SERVICE LTD.',
             'location': 'BC',
