@@ -15,7 +15,7 @@
 from collections import Counter
 import math
 
-from . import porter
+from . import porter, EXACT_MATCH, OTHER_W, MINIMUM_SIMILARITY, STEM_W, SUBS_W
 from namex.services.name_request.auto_analyse.name_analysis_utils \
     import get_classification, subsequences, get_flat_list, remove_spaces_list
 

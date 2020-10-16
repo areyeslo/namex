@@ -17,18 +17,18 @@
 import quart.flask_patch
 # Thanks!
 
+from namex import models
+from namex.models import db, ma
+
 import asyncio
 import os
+import logging
 
 from quart import Quart, jsonify, request
 import config
 from nltk.stem import PorterStemmer
 
 porter = PorterStemmer()
-
-from namex import models
-from namex.models import db, ma
-from .analyzer import auto_analyze
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
@@ -86,6 +86,8 @@ loop = asyncio.get_event_loop()
 app = loop.run_until_complete(create_app(RUN_MODE))
 db.app = app  # Just set it, see if it works...
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 @app.route('/', methods=['POST'])
 async def private_service():
@@ -107,4 +109,3 @@ async def private_service():
 
 if __name__ == "__main__":
     app.run(port=7000, host='localhost')
-
