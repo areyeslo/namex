@@ -233,7 +233,7 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
     print(dict_name_words_original)
 
     service.set_name_tokens_search_conflict(service.compound_descriptive_name_tokens)
-    service._list_dist_words_search_conflicts = remove_misplaced_distinctive(list(service.get_list_dist()),
+    service._list_dist_words_search_conflicts = remove_misplaced_distinctive(service.get_list_dist(),
                                                                              service.get_list_desc(),
                                                                              service.name_tokens_search_conflict)
 
@@ -289,7 +289,7 @@ def update_compound_tokens(list_desc_compound, original_list):
     regex = re.compile(r'(?<!\w)({0})(?!\w)'.format(compound_alternators))
     compound_name = regex.findall(str_original)
 
-    return compound_name
+    return list(filter(None, compound_name))
 
 
 def update_token_list(list_dist_desc, list_name):
