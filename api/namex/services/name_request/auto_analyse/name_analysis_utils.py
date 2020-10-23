@@ -220,15 +220,17 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
     service._list_dist_words, dict_desc = get_all_synonyms(syn_svc, stand_alone_words,
                                                            service.get_list_dist(),
                                                            service.get_list_desc(), match)
-    service._list_desc_words = remove_distinctive_in_descriptive(dict_desc, service.get_list_desc())
+    service._list_desc_words = remove_distinctive_in_descriptive(service.get_list_desc(), service.get_list_dist())
     service._list_desc_words = update_compound_tokens(list(dict_desc.keys()), service.get_list_desc())
     dict_desc = update_dictionary(dict_desc, service.get_list_desc())
 
     # Check if words are in the same category
     if 1 < service.get_list_dist().__len__() == match.__len__():
         service._list_desc_words = [service.get_list_dist().pop()]
+        dict_desc.update({service.get_list_desc()[0]: service.get_list_desc()})
     elif 1 < service.get_list_desc().__len__() == match.__len__():
         service._list_dist_words = [service.get_list_desc().pop(0)]
+        dict_desc.pop(service.get_list_dist()[0], None)
 
     # Update tokenization of name
     service.set_compound_descriptive_name_tokens(
@@ -415,7 +417,7 @@ def generate_possible_synonyms(list_descriptive):
     return list_compound
 
 
-def remove_distinctive_in_descriptive(dict_desc, list_desc_words):
-    list_desc_words = [k for k in list_desc_words if k in dict_desc]
+def remove_distinctive_in_descriptive(list_desc_words, list_dist_words):
+    list_desc_words = [k for k in list_desc_words if k not in list_dist_words]
 
     return list_desc_words
