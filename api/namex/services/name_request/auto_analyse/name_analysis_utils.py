@@ -39,7 +39,7 @@ def remove_french(text, all_designations_alternators):
                       0,
                       re.IGNORECASE)
         return " ".join(text.lower().split())
-    text = re.sub('-/', ' ', text)
+    text = re.sub('[-/]', ' ', text)
     return " ".join(text.lower().split())
 
 
