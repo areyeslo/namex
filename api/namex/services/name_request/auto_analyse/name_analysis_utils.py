@@ -32,11 +32,14 @@ def get_flat_list(lst):
 
 
 def remove_french(text, all_designations_alternators):
-    text = re.sub(r'^([^-/]*?\b({0})(?!\w)[^-/\n]*)(?:[-/]\s*(.*))?$'.format(all_designations_alternators),
-                  r'\1 ',
-                  text,
-                  0,
-                  re.IGNORECASE)
+    if all_designations_alternators:
+        text = re.sub(r'^([^-/]*?\b({0})(?!\w)[^-/\n]*)(?:[-/]\s*(.*))?$'.format(all_designations_alternators),
+                      r'\1 ',
+                      text,
+                      0,
+                      re.IGNORECASE)
+        return " ".join(text.lower().split())
+    text = re.sub('-/', ' ', text)
     return " ".join(text.lower().split())
 
 
