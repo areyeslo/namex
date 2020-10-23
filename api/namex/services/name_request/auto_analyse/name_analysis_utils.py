@@ -226,9 +226,9 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
 
     # Check if words are in the same category
     if 1 < service.get_list_dist().__len__() == match.__len__():
-        service._list_desc = service.list_dist().pop()
+        service._list_desc_words = service.list_dist().pop()
     elif 1 < service.get_list_desc().__len__() == match.__len__():
-        service._list_dist = service.get_list_desc().pop(0)
+        service._list_dist_words = service.get_list_desc().pop(0)
 
     # Update tokenization of name
     service.set_compound_descriptive_name_tokens(
