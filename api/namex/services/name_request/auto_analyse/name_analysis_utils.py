@@ -381,7 +381,7 @@ def handle_unclassified_words(service, token_svc):
 def update_dictionary(dict_desc, list_desc):
     dict_desc_updated = {}
     for item in list_desc:
-        value = dict_desc.get(item)
+        value = dict_desc.get(item,[item])
         dict_desc_updated[item] = value
 
     return dict_desc_updated
