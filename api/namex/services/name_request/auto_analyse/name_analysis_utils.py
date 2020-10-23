@@ -225,10 +225,10 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
     dict_desc = update_dictionary(dict_desc, service.get_list_desc())
 
     # Check if words are in the same category
-    if 1 < service.get_list_dist().__len__() == match.__len__():
+    if 2 < service.get_list_dist().__len__() == match.__len__():
         service._list_desc_words = [service.get_list_dist().pop()]
         dict_desc.update({service.get_list_desc()[0]: service.get_list_desc()})
-    elif 1 < service.get_list_desc().__len__() == match.__len__():
+    elif 2 < service.get_list_desc().__len__() == match.__len__():
         service._list_dist_words = [service.get_list_desc().pop(0)]
         dict_desc.pop(service.get_list_dist()[0], None)
 
