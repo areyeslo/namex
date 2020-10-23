@@ -66,7 +66,7 @@ async def auto_analyze(name: str, list_name: list, list_dist: list,
     dict_matches_counter = {}
 
     np_svc.set_name(name, np_svc_prep_data)
-    stand_alone_words = np_svc.get_stand_alone_words()
+    stand_alone_words = np_svc_prep_data.get_stand_alone_words()
 
     if np_svc.name_tokens == list_name:
         similarity = EXACT_MATCH
