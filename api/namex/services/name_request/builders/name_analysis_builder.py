@@ -3,10 +3,9 @@ import re
 import itertools
 from collections import ChainMap
 import warnings
-import datetime
 
 import requests
-from . import EXACT_MATCH, HIGH_CONFLICT_RECORDS, HIGH_SIMILARITY, START_NEXT_YEAR
+from . import EXACT_MATCH, HIGH_CONFLICT_RECORDS, HIGH_SIMILARITY, HUNDRED_YEARS_AGO, CURRENT_YEAR
 from ..auto_analyse.abstract_name_analysis_builder import AbstractNameAnalysisBuilder, ProcedureResult
 from ..auto_analyse import AnalysisIssueCodes, MAX_LIMIT, MAX_MATCHES_LIMIT
 from ..auto_analyse.name_analysis_utils import get_conflicts_same_classification, \
@@ -36,6 +35,8 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                                   processed_name, list_original_name):
         result = ProcedureResult()
         result.is_valid = True
+
+        result_array = []
 
         first_classification = None
         if name_dict:
@@ -691,18 +692,29 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         return unique_matches
 
-    def is_valid_year(self, last_word):
-        now = datetime.datetime.now()
-        year = now.year
-        month = now.month
-        day = now.day
+    def is_valid_year(self, list_name):
+        result = ProcedureResult()
+        result.is_valid = True
 
-        year_in_name = re.search(r'^[2][0-2][0-9]{2}$', last_word)
+        years_in_name = []
+        incorrect_years = []
+        try:
+            for item in list_name:
+                year = re.search(r'\b[1-2][0-9]{3}\b', item)
+                if year:
+                    years_in_name.append(int(year.group(0)))
+        except ValueError:
+            pass
 
-        if year_in_name:
-            if year_in_name < year:
-                return False
-            elif year_in_name > year and month <= START_NEXT_YEAR.month() and day < START_NEXT_YEAR.day():
-                return False
-            return True
-        return True
+        for year in years_in_name:
+            if year < HUNDRED_YEARS_AGO or year > CURRENT_YEAR:
+                incorrect_years.append(str(year))
+
+        if incorrect_years:
+            result.is_valid = False
+            result.result_code = AnalysisIssueCodes.INCORRECT_YEAR
+
+            result.values = {
+                'incorrect_years': incorrect_years
+            }
+        return result
