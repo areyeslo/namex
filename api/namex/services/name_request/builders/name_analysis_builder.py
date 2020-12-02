@@ -10,7 +10,7 @@ from . import EXACT_MATCH, HIGH_CONFLICT_RECORDS, HIGH_SIMILARITY, CURRENT_YEAR,
 from ..auto_analyse.abstract_name_analysis_builder import AbstractNameAnalysisBuilder, ProcedureResult
 from ..auto_analyse import AnalysisIssueCodes, MAX_LIMIT, MAX_MATCHES_LIMIT, porter
 from ..auto_analyse.name_analysis_utils import get_conflicts_same_classification, \
-    get_all_dict_substitutions, subsequences, remove_double_letters, remove_double_letters_list_dist_words
+    get_all_dict_substitutions, subsequences, remove_double_letters
 
 from namex.models.request import Request
 
@@ -187,9 +187,6 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             dist_substitution_dict = self.get_dictionary(dist_substitution_dict, w_dist)
         else:
             dist_substitution_dict = self.get_substitutions_distinctive(w_dist)
-
-        w_dist, list_name, dist_substitution_dict = remove_double_letters_list_dist_words(w_dist, list_name,
-                                                                                          dist_substitution_dict)
 
         list_conflict_details = list()
 
@@ -498,7 +495,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                 all_subs_dict = get_all_dict_substitutions(dist_substitution_dict, desc_synonym_dict, list_name)
                 # Get  N highest score (values) and shortest names (key)
                 dict_highest_counter.update({k: v for k, v in
-                                             sorted(dict_matches_counter.items(), key=lambda item: (-item[1], item[0]))[
+                                             sorted(dict_matches_counter.items(), key=lambda item: (-item[1], len(item[0])))[
                                              0:MAX_MATCHES_LIMIT]})
                 list_details = self.get_details_higher_score(dict_highest_counter, selected_matches, all_subs_dict)
                 forced = True if any(value == EXACT_MATCH for value in dict_highest_counter.values()) else False
