@@ -198,7 +198,8 @@ def get_conflicts_same_classification(builder, name_tokens, processed_name, stan
     list_dist, list_desc = \
         list_distinctive_descriptive(name_tokens, list_dist, list_desc)
     # Search conflicts coming from check_name_is_well_formed analysis
-    check_conflicts = builder.search_conflicts(list_dist, list_desc, list_desc, name_tokens, processed_name, stand_alone_words,
+    check_conflicts = builder.search_conflicts(list_dist, list_desc, list_desc, name_tokens, processed_name,
+                                               stand_alone_words,
                                                check_name_is_well_formed=True)
 
     return check_conflicts
@@ -362,3 +363,11 @@ def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitut
                 dist_substitution_dict[not_double_letters_item].append(not_double_letters_item)
 
     return list_dist_final, name_tokens, dist_substitution_dict
+
+
+def get_synonyms(syn_svc, list_words):
+    synonyms_dict = {}
+    for word in list_words:
+        substitutions = syn_svc.get_word_synonyms(word=word).data
+        synonyms_dict.update({word: substitutions})
+    return synonyms_dict
