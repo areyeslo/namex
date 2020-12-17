@@ -22,12 +22,11 @@ import config  # pylint: disable=wrong-import-order; # noqa: I001
 import quart.flask_patch
 from namex import models
 from namex.models import db, ma
+from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from quart import Quart, jsonify, request
 
-
-from .analyzer import auto_analyze
-
+from .analyzer import auto_analyze, clean_name
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
@@ -94,6 +93,13 @@ async def private_service():
     matches = json_data.get('names')
 
     app.logger.debug('Number of matches: {0}'.format(len(matches)))
+
+    clean_names = await asyncio.gather(
+        *[clean_name(name, np_svc_prep_data) for name in matches]
+    )
+    list_words = list(set(get_flat_list(clean_names)))
+
+    dict_synonyms_all= get_synonyms(list_words)
 
     result = await asyncio.gather(
         *[auto_analyze(name, list_name, list_dist, list_desc, dict_substitution, dict_synonyms, np_svc_prep_data) for

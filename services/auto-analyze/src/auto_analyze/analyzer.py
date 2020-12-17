@@ -31,7 +31,6 @@ from namex.services.name_request.builders.name_analysis_builder import NameAnaly
 from nltk.stem import PorterStemmer
 from swagger_client import SynonymsApi as SynonymService
 
-
 porter = PorterStemmer()
 
 synonym_service = SynonymService()
@@ -152,6 +151,22 @@ async def auto_analyze(name: str,  # pylint: disable=too-many-locals, too-many-a
         dict_matches_counter.update({name: similarity})
 
     return dict_matches_counter
+
+
+async def clean_name(name: str,
+                     np_svc_prep_data: name_analysis_service) -> list:
+    """Return a a list of clean names"""
+    logging.getLogger(__name__).debug('name: %s', name)
+
+    service = name_analysis_service
+    np_svc = service.name_processing_service
+
+    np_svc.set_name(name, np_svc_prep_data)
+    name_tokens= np_svc.name_tokens
+
+    return name_tokens
+
+
 
 
 def get_vector(conflict_class_list, original_class_list, class_subs_dict, dist=False):
