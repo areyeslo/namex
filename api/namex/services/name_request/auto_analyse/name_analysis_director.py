@@ -262,6 +262,12 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
         # Classify the tokens that were created by NameProcessingService
         self.token_classifier = wc_svc.classify_tokens(np_svc.name_tokens)
 
+    def set_synonym_dictionaries(self):
+        np_svc = self.name_processing_service
+        np_svc.set_synonyms_dictionary(self._list_name_words)
+        np_svc.set_compound_synonyms_dictionary(self._list_name_words)
+        np_svc.set_substitutions_dictionary(self._list_name_words)
+
     '''
     This is the main execution call that wraps name analysis checks. 
     - Perform checks to ensure the name is well formed. 
@@ -282,7 +288,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             analysis = []
 
             # Configure the analysis for the supplied builder
-            get_classification(self, stand_alone_words, syn_svc, self.name_tokens, wc_svc, token_svc)
+            get_classification(self, stand_alone_words, syn_svc, self.name_tokens, wc_svc, token_svc,np_svc)
 
             if auto_analyze_config in ('WELL_FORMED_NAME', 'EXACT_MATCH', 'SEARCH_CONFLICTS'):
                 check_words_to_avoid = builder.check_words_to_avoid(self.name_tokens, self.processed_name)
