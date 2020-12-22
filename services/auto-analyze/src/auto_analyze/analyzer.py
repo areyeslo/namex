@@ -53,30 +53,27 @@ HIGH_CONFLICT_RECORDS = 20
 
 
 # ok deep function
-async def auto_analyze(name: str,  # pylint: disable=too-many-locals, too-many-arguments
+async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, too-many-arguments
                        list_name: list, list_dist: list,
                        list_desc: list, dict_substitution: dict,
                        dict_synonyms: dict,
-                       np_svc_prep_data: name_analysis_service) -> dict:
+                       dict_synonyms_all:dict,
+                       stand_alone_words: list) -> dict:
     """Return a dictionary with name as key and similarity as value, 1.0 is an exact match."""
     logging.getLogger(__name__).debug(
         'name: %s ,  list_name %s,  list_dist: %s, list_desc: %s, dict_subst: %s,  dict_syns: %s',
-        name, list_name, list_dist, list_desc, dict_substitution, dict_synonyms)
+        name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms)
     syn_svc = synonym_service
     service = name_analysis_service
-    np_svc = service.name_processing_service
     wc_svc = service.word_classification_service
     token_svc = service.token_classifier_service
 
     dict_matches_counter = {}
 
-    np_svc.set_name(name, np_svc_prep_data)
-    stand_alone_words = np_svc_prep_data.get_stand_alone_words()
-
-    if np_svc.name_tokens == list_name:
+    if name_tokens == list_name:
         similarity = EXACT_MATCH
     else:
-        match_list = np_svc.name_tokens
+        match_list = name_tokens
         get_classification(service, stand_alone_words, syn_svc, match_list, wc_svc, token_svc, True)
 
         dist_db_substitution_dict = builder.get_substitutions_distinctive(service.get_list_dist())
