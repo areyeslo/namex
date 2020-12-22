@@ -114,6 +114,7 @@ class BcNameAnalysis(Resource):
       REN = Restore by starting a new business
       - Always to examination
     """
+
     @staticmethod
     @cors.crossdomain(origin='*')
     # @jwt.requires_auth
@@ -138,7 +139,8 @@ class BcNameAnalysis(Resource):
         valid_location = location == ValidLocations.CA_BC.value
         valid_protected_entity_type = entity_type in BCProtectedNameEntityTypes.list()
         valid_unprotected_entity_type = entity_type in BCUnprotectedNameEntityTypes.list()
-        is_protected_action = request_action in [AnalysisRequestActions.NEW.value, AnalysisRequestActions.CHG.value, AnalysisRequestActions.MVE.value]
+        is_protected_action = request_action in [AnalysisRequestActions.NEW.value, AnalysisRequestActions.CHG.value,
+                                                 AnalysisRequestActions.MVE.value]
         is_unprotected_action = request_action in [AnalysisRequestActions.NEW.value]
 
         try:
@@ -164,6 +166,7 @@ class BcNameAnalysis(Resource):
             service.use_builder(builder)  # Required step! TODO: Enforce this!
             service.set_entity_type(entity_type)  # Required step! TODO: Enforce this!
             service.set_name(name)  # Required step! TODO: Enforce this!
+            service.set_synonym_dictionaries()
 
         except Exception as err:
             print('Error initializing BcNameAnalysis service: ' + repr(err.with_traceback(None)))
