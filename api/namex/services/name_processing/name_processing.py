@@ -1,9 +1,11 @@
 import re
 import warnings
+import ast
 
 from . import LanguageCodes
 from ..name_request.auto_analyse.mixins.get_designations_lists import GetDesignationsListsMixin
-from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words, check_numbers_beginning
+from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words, check_numbers_beginning, \
+    get_compound_descriptives
 from namex.services.word_classification.word_classification import WordClassificationService
 
 from .mixins.get_synonym_lists import GetSynonymListsMixin
@@ -215,7 +217,7 @@ class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
         return exceptions_designation
 
     def exception_designation_stop_word(self, stop_words, all_designations):
-        exception_stopword_designation= []
+        exception_stopword_designation = []
         for word in stop_words:
             for designation in all_designations:
                 if bool(re.search(r'\b{0}\b'.format(word), designation)):
@@ -248,6 +250,27 @@ class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
 
         self._designated_all_words = list(set(self._designated_any_words + self._designated_end_words))
         self._designated_all_words.sort(key=len, reverse=True)
+
+    def set_synonyms_dictionary(self, list_name):
+        syn_svc = self.synonym_service
+        for word in list_name:
+            synonym_response = syn_svc.get_word_synonyms(word=word).data
+            if synonym_response:
+                synonym_response = [ast.literal_eval(x) for x in synonym_response]
+                synonym_response = [x.strip(' ') for element in synonym_response for x in element]
+                synonym_response.pop(0)
+                self._synonyms[word] = list(set(synonym_response))
+
+    def set_compound_synonyms_dictionary(self, list_name):
+        syn_svc = self.synonym_service
+        self._compound_synonyms.update(get_compound_descriptives(list_name, syn_svc, {}))
+
+    def set_substitutions_dictionary(self, list_name):
+        syn_svc = self.synonym_service
+        for word in list_name:
+            substitution_response = syn_svc.get_word_substitutions(word=word).data
+            if substitution_response:
+                self._substitutions[word] = list(set(substitution_response))
 
     '''
     Split a name string into classifiable tokens. Called whenever set_name is invoked.
