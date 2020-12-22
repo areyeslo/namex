@@ -149,14 +149,14 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
     @return ProcedureResult
     '''
 
-    def search_conflicts(self, list_dist_words, list_desc_criteria, list_desc_words, list_name, name, stand_alone_words,
+    def search_conflicts(self, list_dist_words, list_desc_criteria, list_desc_words, dict_desc, dict_dist, list_name, name, stand_alone_words,
                          check_name_is_well_formed=False, queue=False):
         list_conflicts, most_similar_names = [], []
         dict_highest_counter, response = {}, {}
         self._list_processed_names = list()
         for w_dist, w_desc_criteria, w_desc in zip(list_dist_words, list_desc_criteria, list_desc_words):
             if w_dist and w_desc_criteria:
-                list_details, forced = self.get_conflicts(dict_highest_counter, w_dist, w_desc_criteria, w_desc,
+                list_details, forced = self.get_conflicts(dict_highest_counter, w_dist, w_desc_criteria, w_desc,dict_desc, dict_dist,
                                                           list_name, stand_alone_words,
                                                           check_name_is_well_formed, queue)
                 list_conflicts.extend(list_details)
@@ -171,22 +171,20 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         return self.prepare_response(most_similar_names, queue, list_name, list_dist_words, list_desc_words)
 
-    def get_conflicts(self, dict_highest_counter, w_dist, w_desc_criteria, w_desc, list_name, stand_alone_words,
+    def get_conflicts(self, dict_highest_counter, w_dist, w_desc_criteria, w_desc, dict_desc, dict_dist, list_name, stand_alone_words,
                       check_name_is_well_formed, queue):
         dist_substitution_dict, desc_synonym_dict, dist_substitution_compound_dict, desc_synonym_compound_dict = {}, {}, {}, {}
-        desc_synonym_dict = self.get_substitutions_descriptive(w_desc)
-
         # Check if a token is stand-alone word
-        desc_synonym_dict = self.get_stand_alone_substitutions(desc_synonym_dict, stand_alone_words)
+        desc_synonym_dict = self.get_stand_alone_substitutions(dict_desc, stand_alone_words)
 
         diff_desc = list(set(w_desc) - set(w_desc_criteria))
-        desc_synonym_criteria_dict = self.remove_key(diff_desc, desc_synonym_dict)
+        desc_synonym_criteria_dict = self.remove_key(diff_desc, dict_desc)
 
         # Need to check if the name is well formed?
         if check_name_is_well_formed:
             dist_substitution_dict = self.get_dictionary(dist_substitution_dict, w_dist)
         else:
-            dist_substitution_dict = self.get_substitutions_distinctive(w_dist)
+            dist_substitution_dict = dict_dist
 
         w_dist, list_name, dist_substitution_dict = remove_double_letters_list_dist_words(w_dist, list_name,
                                                                                           dist_substitution_dict)
@@ -195,7 +193,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         change_filter = True if self.director.skip_search_conflicts else False
         list_details, forced = self.get_conflicts_db(dist_substitution_dict, desc_synonym_criteria_dict,
-                                                     desc_synonym_dict,
+                                                     dict_desc,
                                                      dict_highest_counter, change_filter, list_name,
                                                      check_name_is_well_formed, queue)
         list_conflict_details.extend(list_details)
@@ -573,24 +571,24 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
 
         return list_details
 
-    def get_substitutions_distinctive(self, w_dist):
-        syn_svc = self.synonym_service
-
-        all_dist_substitutions_synonyms = syn_svc.get_all_substitutions_synonyms(
-            words=w_dist,
-            words_are_distinctive=True
-        ).data
-
-        dist_substitution_dict = parse_dict_of_lists(all_dist_substitutions_synonyms)
-
-        for key, value in dist_substitution_dict.items():
-            stem_w = porter.stem(key)
-            if stem_w not in value:
-                value.append(stem_w)
-            if key not in value:
-                value.append(key)
-
-        return dist_substitution_dict
+    # def get_substitutions_distinctive(self, w_dist):
+    #     syn_svc = self.synonym_service
+    #
+    #     all_dist_substitutions_synonyms = syn_svc.get_all_substitutions_synonyms(
+    #         words=w_dist,
+    #         words_are_distinctive=True
+    #     ).data
+    #
+    #     dist_substitution_dict = parse_dict_of_lists(all_dist_substitutions_synonyms)
+    #
+    #     for key, value in dist_substitution_dict.items():
+    #         stem_w = porter.stem(key)
+    #         if stem_w not in value:
+    #             value.append(stem_w)
+    #         if key not in value:
+    #             value.append(key)
+    #
+    #     return dist_substitution_dict
 
     def get_substitutions_descriptive(self, w_desc):
         syn_svc = self.synonym_service

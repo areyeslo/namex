@@ -78,7 +78,9 @@ class ProtectedNameAnalysisService(NameAnalysisDirector, SetDesignationsListsMix
                         [self.get_list_dist_search_conflicts()],
                         [self.get_list_desc_search_conflicts()],
                         [self.get_list_desc()],
-                        self.name_tokens,
+                        self.get_dict_desc(),
+                        self.get_dict_dist(),
+                        self.compound_descriptive_name_tokens,
                         self.processed_name,
                         np_svc.get_stand_alone_words()
                     )
@@ -96,7 +98,9 @@ class ProtectedNameAnalysisService(NameAnalysisDirector, SetDesignationsListsMix
             #     [self.get_list_dist_search_conflicts()],
             #     [self.get_list_desc_search_conflicts()],
             #     [self.get_list_desc()],
-            #     self.name_tokens,
+            #     self.get_dict_desc(),
+            #     self.get_dict_dist(),
+            #     self.compound_descriptive_name_tokens,
             #     self.processed_name,
             #     np_svc.get_stand_alone_words(),
             #     check_name_is_well_formed=False,
