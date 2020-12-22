@@ -217,8 +217,7 @@ def get_conflicts_same_classification(builder, name_tokens, processed_name, stan
     return check_conflicts
 
 
-def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token_svc, np_svc, conflict=False):
-    # desc_compound_dict = get_compound_descriptives(service, syn_svc)
+def get_classification(service, stand_alone_words, match, wc_svc, token_svc, np_svc, conflict=False):
     service.set_compound_descriptive_name_tokens(
         update_compound_tokens(list(np_svc.get_compound_synonyms().keys()), match))
 

@@ -248,12 +248,10 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
     @:prop name_tokens Word tokens generated from the cleaned name
     '''
 
-    def set_name(self, name):
+    def set_name(self, name, np_svc_prep_data):
         np_svc = self.name_processing_service
-        np_svc_prep_data = self.name_processing_service
         wc_svc = self.word_classification_service
 
-        np_svc_prep_data.prepare_data()
         np_svc.set_name(name, np_svc_prep_data)
         np_svc.set_name_tokenized(np_svc.name_first_part)
 
@@ -288,7 +286,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             analysis = []
 
             # Configure the analysis for the supplied builder
-            get_classification(self, stand_alone_words, syn_svc, self.name_tokens, wc_svc, token_svc,np_svc)
+            get_classification(self, stand_alone_words, self.name_tokens, wc_svc, token_svc, np_svc)
 
             if auto_analyze_config in ('WELL_FORMED_NAME', 'EXACT_MATCH', 'SEARCH_CONFLICTS'):
                 check_words_to_avoid = builder.check_words_to_avoid(self.name_tokens, self.processed_name)
