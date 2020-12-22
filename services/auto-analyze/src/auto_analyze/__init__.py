@@ -22,17 +22,18 @@ import config  # pylint: disable=wrong-import-order; # noqa: I001
 import quart.flask_patch
 from namex import models
 from namex.models import db, ma
+from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms_dictionary, get_compound_synonyms
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from quart import Quart, jsonify, request
+from swagger_client import SynonymsApi as SynonymService
 
-
-from .analyzer import auto_analyze
-
+from .analyzer import auto_analyze, clean_name
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
 RUN_MODE = os.getenv('FLASK_ENV', 'production')
 
+synonym_service = SynonymService()
 
 async def create_app(run_mode):
     """Create the app object for configuration and use."""
@@ -83,6 +84,7 @@ async def private_service():
     name_analysis_service = ProtectedNameAnalysisService()
     service = name_analysis_service
     np_svc_prep_data = service.name_processing_service
+    syn_svc = synonym_service
     np_svc_prep_data.prepare_data()
 
     json_data = await request.get_json()
@@ -95,9 +97,20 @@ async def private_service():
 
     app.logger.debug('Number of matches: {0}'.format(len(matches)))
 
+    name_tokens_clean = await asyncio.gather(
+        *[clean_name(name, np_svc_prep_data) for name in matches]
+    )
+
+    stand_alone_words = np_svc_prep_data.get_stand_alone_words()
+
+    list_words = list(set(get_flat_list(name_tokens_clean)))
+    dict_synonyms_all = get_synonyms_dictionary(syn_svc, dict_synonyms, list_words)
+    dict_compound_synonyms_all = get_compound_synonyms(syn_svc, dict_synonyms, name_tokens_clean)
+
     result = await asyncio.gather(
-        *[auto_analyze(name, list_name, list_dist, list_desc, dict_substitution, dict_synonyms, np_svc_prep_data) for
-          name in matches]
+        *[auto_analyze(name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
+                       dict_synonyms_all, stand_alone_words) for
+          name_tokens in name_tokens_clean]
     )
     return jsonify(result=result)
 
