@@ -28,37 +28,33 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
     _parse_csv_line = lambda x: (x.split(','))
 
     @classmethod
-    def flatten_synonyms_text(cls, results):
+    def format_synonyms_text(cls, results):
         # Convert tuple results to a list of of CSV strings
         result_arr = [item for sublist in results for item in sublist]
         result_arr = [x.strip() for x in result_arr]
 
         result_arr = [*map(cls._parse_csv_line, result_arr)]
-        flattened_arr = [item for sublist in result_arr for item in sublist]
-        return flattened_arr
+        return result_arr
 
     '''
     Designations, distinctives and descriptives return stems_text
     '''
 
-    def find_word_synonyms(self, word, filters, stand_alone=False, category=False, entity_type=None, stem=False):
+    def find_word_synonyms(self, word, filters, stand_alone=False, category=False, entity_type=None, synonym=False):
         model = self.get_model()
         word = word.lower() if isinstance(word, str) else None
-
-        if word:
-            if stem:
-                filters.append(
-                    func.lower(model.stems_text).op('~')(r'\y{}\y'.format(porter.stem(word).replace(" ", ""))))
-            else:
-                filters.append(
-                    func.lower(model.synonyms_text).op('~')(r'\y{}\y'.format(word).replace(" ", "")))
 
         field = []
         if category:
             field = [model.category]
+        elif stand_alone:
+            field = [model.synonyms_text]
+        elif entity_type:
+            field = [model.stems_text]
+        elif synonym:
+            field = [model.category, model.stems_text, model.synonyms_text]
         else:
-            field = [model.synonyms_text] if stand_alone else [model.stems_text] if entity_type else [model.stems_text,
-                                                                                                      model.synonyms_text]
+            field = [model.stems_text, model.synonyms_text]
 
         criteria = SynonymQueryCriteria(
             word=word,
@@ -76,30 +72,31 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
 
         filters = [
             ~func.lower(model.category).op('~')(r'\y{}\y'.format('sub')),
-            ~func.lower(model.category).op('~')(r'\y{}\y'.format('stop'))
+            ~func.lower(model.category).op('~')(r'\y{}\y'.format('stop')),
+            func.lower(model.stems_text).op('~')(r'\y{}\y'.format(porter.stem(word).replace(" ", ""))),
+            func.lower(model.synonyms_text).op('~')(r'\y{}\y'.format(word).replace(" ", ""))
         ]
 
-        results = self.find_word_synonyms(word, filters, category, stem=False)
-        if not results:
-            # Remove filter searching for synonyms_text and add filter for stems_text
-            filters.pop()
-            results = self.find_word_synonyms(word, filters, category, stem=True)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
+        results = self.find_word_synonyms(word, filters, category, entity_type=None, synonym=True)
+        formatted = list(filter(None, self.format_synonyms_text(results)))
 
-        return flattened
+        return formatted
 
     def get_substitutions(self, word=None):
         model = self.get_model()
 
         filters = [
-            func.lower(model.category).op('~')(r'\y{}\y'.format('sub'))
+            func.lower(model.category).op('~')(r'\y{}\y'.format('sub')),
+            func.lower(model.stems_text).op('~')(r'\y{}\y'.format(porter.stem(word).replace(" ", ""))),
+            func.lower(model.synonyms_text).op('~')(r'\y{}\y'.format(word).replace(" ", ""))
         ]
 
         results = self.find_word_synonyms(word, filters)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
-        if not flattened:
-            # Add ing to the word if applicable
-            flattened = self.get_gerund_word(word)
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
+        #if not flattened:
+        #    # Add ing to the word if applicable
+        #    flattened = self.get_gerund_word(word)
 
         return flattened
 
@@ -111,7 +108,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         ]
 
         results = self.find_word_synonyms(word, filters)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
 
         stop_words_list = sorted(set(flattened), key=len, reverse=True)
 
@@ -125,7 +123,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         ]
 
         results = self.find_word_synonyms(None, filters)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
         return flattened
 
     def get_standalone(self):
@@ -136,8 +135,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         ]
 
         results = self.find_word_synonyms(None, filters, stand_alone=True)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
-
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
         stand_alone_list = sorted(set(flattened), key=len, reverse=True)
 
         return stand_alone_list
@@ -150,7 +149,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         ]
 
         results = self.find_word_synonyms(None, filters)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
         return flattened
 
     def get_designations(self, entity_type_str, position_str, lang):
@@ -175,7 +175,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         filters.append(func.lower(model.category).op('~')(r'\y{}\y'.format(lang.lower())))
 
         results = self.find_word_synonyms(None, filters, entity_type=entity_type_code)
-        flattened = list(set(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results)))))))
+        flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
+        flattened = list(map(str.strip, (list(filter(None, flattened)))))
         flattened.sort(key=len, reverse=True)
         return flattened
 
