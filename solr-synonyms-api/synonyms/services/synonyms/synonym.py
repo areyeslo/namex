@@ -4,7 +4,7 @@ from sqlalchemy import func
 
 from synonyms.models.synonym import Synonym
 from synonyms.criteria.synonym.query_criteria import SynonymQueryCriteria
-from . import LanguageCodes
+from . import LanguageCodes, DesignationPositionCodes
 from . import porter
 from pyinflect import getInflection
 
@@ -40,24 +40,29 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
     Designations, distinctives and descriptives return stems_text
     '''
 
-    def find_word_synonyms(self, word, filters, stand_alone=False, category=False, entity_type=None, synonym=False):
+    def find_word_synonyms(self, word, filters, stand_alone=False):
         model = self.get_model()
         word = word.lower() if isinstance(word, str) else None
 
         field = []
-        if category:
-            field = [model.category]
-        elif stand_alone:
+        if stand_alone:
             field = [model.synonyms_text]
-        elif entity_type:
-            field = [model.stems_text]
-        elif synonym:
-            field = [model.category, model.stems_text, model.synonyms_text]
         else:
-            field = [model.stems_text, model.synonyms_text]
+            field = [model.category, model.stems_text, model.synonyms_text]
 
         criteria = SynonymQueryCriteria(
             word=word,
+            fields=field,
+            filters=filters
+        )
+
+        return model.find_by_criteria(criteria)
+
+    def find_all_synonyms(self, filters):
+        model = self.get_model()
+        field = [model.category, model.stems_text, model.synonyms_text]
+
+        criteria = SynonymQueryCriteria(
             fields=field,
             filters=filters
         )
@@ -94,7 +99,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         results = self.find_word_synonyms(word, filters)
         flattened = [item for sublist in self.format_synonyms_text(results) for item in sublist]
         flattened = list(map(str.strip, (list(filter(None, flattened)))))
-        #if not flattened:
+        # if not flattened:
         #    # Add ing to the word if applicable
         #    flattened = self.get_gerund_word(word)
 
@@ -179,6 +184,17 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         flattened = list(map(str.strip, (list(filter(None, flattened)))))
         flattened.sort(key=len, reverse=True)
         return flattened
+
+    def get_all_designations(self):
+        lang = "|".join([LanguageCodes.ENG.value, LanguageCodes.FR.value])
+        position = "|".join([DesignationPositionCodes.END.value, DesignationPositionCodes.ANY.value])
+        model = self.get_model()
+
+        filters = [func.lower(model.category).op('~')(
+            r'^[A-Za-z]{2,3}[-_]+valid\s+({0})\s+{1}({2})\s+stop$'.format(lang, 'designation[s]?[_-]', position))]
+
+        results = self.find_word_synonyms(None, filters)
+        return results
 
     '''
     Rules for Regex Transform (from bottom to top):

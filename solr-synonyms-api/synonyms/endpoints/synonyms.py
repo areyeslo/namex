@@ -295,6 +295,23 @@ class _Designations(Resource):
         }
 
 
+@api.route('/all_designations', strict_slashes=False, methods=['GET'])
+class _AllDesignations(Resource):
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    # @jwt.requires_auth
+    # @api.expect()
+    @api.response(200, 'SynonymsApi', response_list)
+    @marshal_with(response_list)
+    def get():
+        service = SynonymService()
+        results = service.get_all_designations()
+
+        return {
+            'data': results
+        }
+
+
 @api.route('/designated-end-all-words', strict_slashes=False, methods=['GET'])
 class _DesignatedEndAllWords(Resource):
     @staticmethod
@@ -761,6 +778,7 @@ class _RegexPrefixes(Resource):
         return {
             'data': result
         }
+
 
 @api.route('/<col>/<term>', strict_slashes=False, methods=['GET'])
 class _Synonyms(Resource):
