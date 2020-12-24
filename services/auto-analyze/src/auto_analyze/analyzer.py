@@ -25,12 +25,11 @@ from namex.services.name_request.auto_analyse.name_analysis_utils import (
     remove_double_letters_list_dist_words,
     remove_spaces_list,
     subsequences,
-)
+    get_compound_descriptives)
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from namex.services.name_request.builders.name_analysis_builder import NameAnalysisBuilder
 from nltk.stem import PorterStemmer
 from swagger_client import SynonymsApi as SynonymService
-
 
 porter = PorterStemmer()
 
@@ -53,7 +52,8 @@ HIGH_CONFLICT_RECORDS = 20
 
 
 # ok deep function
-async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, too-many-arguments
+async def auto_analyze(name: str,
+                       name_tokens: list,  # pylint: disable=too-many-locals, too-many-arguments
                        list_name: list, list_dist: list,
                        list_desc: list, dict_substitution: dict,
                        dict_synonyms: dict,
@@ -68,6 +68,7 @@ async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, to
     service = name_analysis_service
     wc_svc = service.word_classification_service
     token_svc = service.token_classifier_service
+    np_svc = service.name_processing_service
 
     dict_matches_counter = {}
 
@@ -75,8 +76,8 @@ async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, to
         similarity = EXACT_MATCH
     else:
         match_list = name_tokens
-        get_classification(service, stand_alone_words, syn_svc, match_list, wc_svc, token_svc,
-                           dict_compound_synonyms_all, dict_simple_synonyms_all, True)
+        get_classification(service, match_list, np_svc, wc_svc, token_svc,
+                           dict_compound_synonyms_all, dict_simple_synonyms_all, conflict=True)
 
         dist_db_substitution_dict = builder.get_substitutions_distinctive(service.get_list_dist())
         service._list_dist_words, match_list, _ = remove_double_letters_list_dist_words(service.get_list_dist(),
@@ -151,6 +152,20 @@ async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, to
         dict_matches_counter.update({name: similarity})
 
     return dict_matches_counter
+
+
+async def clean_name(name: str,
+                     np_svc_prep_data: name_analysis_service) -> dict:
+    """Return a a list of clean names"""
+    logging.getLogger(__name__).debug('name: %s', name)
+
+    service = name_analysis_service
+    np_svc = service.name_processing_service
+
+    np_svc.set_name(name, np_svc_prep_data)
+    name_tokens = np_svc.name_tokens
+
+    return {name: name_tokens}
 
 
 def get_vector(conflict_class_list, original_class_list, class_subs_dict, dist=False):
@@ -316,3 +331,14 @@ def add_key_values(d1):
         if key not in values:
             values.append(key)
     return d1
+
+
+def get_compound_synonyms(name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms):
+    dct = {}
+    dict_all_compound_synonyms = {}
+    for key, value in name_tokens_clean_dict.items():
+        dct = get_compound_descriptives(value, syn_svc, dict_all_simple_synonyms)
+        if dct:
+            dict_all_compound_synonyms.update(dct.pop())
+
+    return dict_all_compound_synonyms
