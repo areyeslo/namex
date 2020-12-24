@@ -111,6 +111,12 @@ async def private_service():
 
     dict_all_compound_synonyms = get_compound_synonyms(name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms)
 
+    # Need to split in compound terms the name
+    list_words = update_compound_tokens(list(dict_all_compound_synonyms.keys()), list_words)
+
+    dict_all_substitutions = get_substitutions_dictionary(syn_svc, dict_substitution, dict_synonyms, list_words)
+
+
     result = await asyncio.gather(
         *[auto_analyze(name, name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
                        dict_all_compound_synonyms, dict_all_simple_synonyms, stand_alone_words) for
