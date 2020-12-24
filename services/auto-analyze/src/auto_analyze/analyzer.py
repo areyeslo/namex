@@ -57,7 +57,8 @@ async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, to
                        list_name: list, list_dist: list,
                        list_desc: list, dict_substitution: dict,
                        dict_synonyms: dict,
-                       dict_synonyms_all:dict,
+                       dict_simple_synonyms_all: dict,
+                       dict_compound_synonyms_all: dict,
                        stand_alone_words: list) -> dict:
     """Return a dictionary with name as key and similarity as value, 1.0 is an exact match."""
     logging.getLogger(__name__).debug(
@@ -74,7 +75,8 @@ async def auto_analyze(name_tokens: list,  # pylint: disable=too-many-locals, to
         similarity = EXACT_MATCH
     else:
         match_list = name_tokens
-        get_classification(service, stand_alone_words, syn_svc, match_list, wc_svc, token_svc, True)
+        get_classification(service, stand_alone_words, syn_svc, match_list, wc_svc, token_svc,
+                           dict_compound_synonyms_all, dict_simple_synonyms_all, True)
 
         dist_db_substitution_dict = builder.get_substitutions_distinctive(service.get_list_dist())
         service._list_dist_words, match_list, _ = remove_double_letters_list_dist_words(service.get_list_dist(),
