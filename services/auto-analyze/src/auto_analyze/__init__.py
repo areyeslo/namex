@@ -22,18 +22,20 @@ import config  # pylint: disable=wrong-import-order; # noqa: I001
 import quart.flask_patch
 from namex import models
 from namex.models import db, ma
-from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms_dictionary, get_compound_synonyms
+from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms_dictionary, \
+    get_compound_descriptives
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from quart import Quart, jsonify, request
 from swagger_client import SynonymsApi as SynonymService
 
-from .analyzer import auto_analyze, clean_name
+from .analyzer import auto_analyze, clean_name, get_compound_synonyms
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
 RUN_MODE = os.getenv('FLASK_ENV', 'production')
 
 synonym_service = SynonymService()
+
 
 async def create_app(run_mode):
     """Create the app object for configuration and use."""
@@ -97,22 +99,22 @@ async def private_service():
 
     app.logger.debug('Number of matches: {0}'.format(len(matches)))
 
-    name_tokens_clean = await asyncio.gather(
+    name_tokens_clean_dict_list = await asyncio.gather(
         *[clean_name(name, np_svc_prep_data) for name in matches]
     )
+    name_tokens_clean_dict = dict(pair for d in name_tokens_clean_dict_list for pair in d.items())
 
     stand_alone_words = np_svc_prep_data.get_stand_alone_words()
 
-    list_words = list(set(get_flat_list(name_tokens_clean)))
+    list_words = list(set(get_flat_list(list(name_tokens_clean_dict.values()))))
     dict_all_simple_synonyms = get_synonyms_dictionary(syn_svc, dict_synonyms, list_words)
-    dict_all_compound_synonyms = get_compound_synonyms(syn_svc, dict_synonyms, name_tokens_clean)
-    #dict_synonyms_all = {**dict_simple_synonyms, **dict_compound_synonyms_all}
 
+    dict_all_compound_synonyms = get_compound_synonyms(name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms)
 
     result = await asyncio.gather(
-        *[auto_analyze(name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
+        *[auto_analyze(name, name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
                        dict_all_compound_synonyms, dict_all_simple_synonyms, stand_alone_words) for
-          name_tokens in name_tokens_clean]
+          name, name_tokens in name_tokens_clean_dict.items()]
     )
     return jsonify(result=result)
 
