@@ -256,9 +256,6 @@ class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
         for word in list_name:
             synonym_response = syn_svc.get_word_synonyms(word=word).data
             if synonym_response:
-                synonym_response = [ast.literal_eval(x) for x in synonym_response]
-                synonym_response = [x.strip(' ') for element in synonym_response for x in element]
-                synonym_response.pop(0)
                 self._synonyms[word] = list(set(synonym_response))
 
     def set_compound_synonyms_dictionary(self, list_name):
