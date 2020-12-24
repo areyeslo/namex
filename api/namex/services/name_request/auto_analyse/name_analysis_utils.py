@@ -147,7 +147,7 @@ def check_numbers_beginning(syn_svc, tokens):
     return tokens
 
 
-def check_synonyms(service, np_svc, stand_alone_words, list_dist_words, list_desc_words, list_name):
+def check_synonyms(dict_all_synonyms, list_dist_words, list_desc_words, list_name):
     list_desc_words_set = frozenset(list_desc_words)
     list_desc = []
     dict_desc = {}
@@ -156,10 +156,8 @@ def check_synonyms(service, np_svc, stand_alone_words, list_dist_words, list_des
     for word in list_name:
         if word in list_desc_words:
             synonyms=None
-            if {word} <= np_svc.get_compound_synonyms().keys():
-                synonyms = np_svc.get_compound_synonyms().get(word)
-            elif {word} <= np_svc.get_synonyms().keys():
-                synonyms = np_svc.get_synonyms().get(word)
+            if {word} <= dict_all_synonyms.keys():
+                synonyms = dict_all_synonyms.get(word)
 
             if synonyms:
                 dict_desc[word] = synonyms
@@ -217,10 +215,11 @@ def get_conflicts_same_classification(builder, name_tokens, processed_name, stan
     return check_conflicts
 
 
-def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token_svc, np_svc, conflict=False):
+def get_classification(service, match, np_svc, wc_svc, token_svc, dict_compound_synonyms_all, dict_simple_synonyms_all, conflict=False):
     # desc_compound_dict = get_compound_descriptives(service, syn_svc)
+    dict_all_synonyms= {**dict_compound_synonyms_all,**dict_simple_synonyms_all}
     service.set_compound_descriptive_name_tokens(
-        update_compound_tokens(list(np_svc.get_compound_synonyms().keys()), match))
+        update_compound_tokens(list(dict_compound_synonyms_all.keys()), match))
 
     service.token_classifier = wc_svc.classify_tokens(service.compound_descriptive_name_tokens)
     service._list_dist_words, service._list_desc_words, service._list_none_words = service.word_classification_tokens
@@ -233,8 +232,7 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
                 service.get_list_none(),
                 service.compound_descriptive_name_tokens
             )
-    service._list_dist_words, service._list_desc_words, service._dict_desc_words = check_synonyms(service, np_svc,
-                                                                                                  stand_alone_words,
+    service._list_dist_words, service._list_desc_words, service._dict_desc_words = check_synonyms(dict_all_synonyms,
                                                                                                   service.get_list_dist(),
                                                                                                   service.get_list_desc(),
                                                                                                   service.compound_descriptive_name_tokens)
@@ -277,7 +275,8 @@ def get_classification(service, stand_alone_words, syn_svc, match, wc_svc, token
                                                                            service.name_tokens_search_conflict)
     service.set_name_tokens_search_conflict(remove_spaces_list(service.name_tokens_search_conflict))
 
-    service._dict_dist_words = update_substitution_dictionary(service.get_list_dist(), np_svc.get_substitutions())
+    if not conflict:
+        service._dict_dist_words = update_substitution_dictionary(service.get_list_dist(), np_svc.get_substitutions())
 
     print("Classification for searching conflicts in NameX DB:")
     print(service.get_dict_name_search_conflicts())

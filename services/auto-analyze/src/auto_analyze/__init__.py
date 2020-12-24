@@ -104,12 +104,14 @@ async def private_service():
     stand_alone_words = np_svc_prep_data.get_stand_alone_words()
 
     list_words = list(set(get_flat_list(name_tokens_clean)))
-    dict_synonyms_all = get_synonyms_dictionary(syn_svc, dict_synonyms, list_words)
-    dict_compound_synonyms_all = get_compound_synonyms(syn_svc, dict_synonyms, name_tokens_clean)
+    dict_all_simple_synonyms = get_synonyms_dictionary(syn_svc, dict_synonyms, list_words)
+    dict_all_compound_synonyms = get_compound_synonyms(syn_svc, dict_synonyms, name_tokens_clean)
+    #dict_synonyms_all = {**dict_simple_synonyms, **dict_compound_synonyms_all}
+
 
     result = await asyncio.gather(
         *[auto_analyze(name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
-                       dict_synonyms_all, stand_alone_words) for
+                       dict_all_compound_synonyms, dict_all_simple_synonyms, stand_alone_words) for
           name_tokens in name_tokens_clean]
     )
     return jsonify(result=result)
