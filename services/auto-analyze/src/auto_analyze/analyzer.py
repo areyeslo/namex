@@ -59,6 +59,7 @@ async def auto_analyze(name: str,
                        dict_synonyms: dict,
                        dict_simple_synonyms_all: dict,
                        dict_compound_synonyms_all: dict,
+                       dict_all_substitutions: dict,
                        stand_alone_words: list) -> dict:
     """Return a dictionary with name as key and similarity as value, 1.0 is an exact match."""
     logging.getLogger(__name__).debug(
