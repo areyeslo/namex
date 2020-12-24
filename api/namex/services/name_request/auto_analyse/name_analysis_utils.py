@@ -215,9 +215,8 @@ def get_conflicts_same_classification(builder, name_tokens, processed_name, stan
     return check_conflicts
 
 
-def get_classification(service, match, np_svc, wc_svc, token_svc, dict_compound_synonyms_all, dict_simple_synonyms_all, conflict=False):
+def get_classification(service, match, wc_svc, token_svc, dict_substitutions, dict_compound_synonyms_all, dict_simple_synonyms_all={}, conflict=False):
     # desc_compound_dict = get_compound_descriptives(service, syn_svc)
-    dict_all_synonyms= {**dict_compound_synonyms_all,**dict_simple_synonyms_all}
     service.set_compound_descriptive_name_tokens(
         update_compound_tokens(list(dict_compound_synonyms_all.keys()), match))
 
@@ -232,6 +231,7 @@ def get_classification(service, match, np_svc, wc_svc, token_svc, dict_compound_
                 service.get_list_none(),
                 service.compound_descriptive_name_tokens
             )
+    dict_all_synonyms = {**dict_compound_synonyms_all, **dict_simple_synonyms_all}
     service._list_dist_words, service._list_desc_words, service._dict_desc_words = check_synonyms(dict_all_synonyms,
                                                                                                   service.get_list_dist(),
                                                                                                   service.get_list_desc(),
@@ -276,7 +276,7 @@ def get_classification(service, match, np_svc, wc_svc, token_svc, dict_compound_
     service.set_name_tokens_search_conflict(remove_spaces_list(service.name_tokens_search_conflict))
 
     if not conflict:
-        service._dict_dist_words = update_substitution_dictionary(service.get_list_dist(), np_svc.get_substitutions())
+        service._dict_dist_words = update_substitution_dictionary(service.get_list_dist(), dict_substitutions)
 
     print("Classification for searching conflicts in NameX DB:")
     print(service.get_dict_name_search_conflicts())
@@ -294,9 +294,6 @@ def get_valid_compound_descriptive(syn_svc, original_synonyms_dict, list_compoun
             synonym_response = syn_svc.get_word_synonyms(word=compound.replace(" ", "")).data
 
         if synonym_response:
-            synonym_response = [ast.literal_eval(x) for x in synonym_response]
-            synonym_response = [x.strip(' ') for element in synonym_response for x in element]
-            synonym_response.pop(0)
             desc_dist[compound] = synonym_response
 
     return desc_dist
@@ -392,9 +389,6 @@ def get_synonyms_dictionary(syn_svc, synonyms_original_dict, list_words):
         if not synonyms:
             synonyms = syn_svc.get_word_synonyms(word=word).data
         if synonyms:
-            synonym_response = [ast.literal_eval(x) for x in synonym_response]
-            synonym_response = [x.strip(' ') for element in synonym_response for x in element]
-            synonym_response.pop(0)
             synonyms_dict.update({word: synonyms})
     return synonyms_dict
 

@@ -99,7 +99,8 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
         if not flattened:
             # Add ing to the word if applicable
-            flattened = self.get_gerund_word(word)
+            gerund = self.get_gerund_word(word)
+            flattened = [gerund] if gerund else []
 
         return flattened
 

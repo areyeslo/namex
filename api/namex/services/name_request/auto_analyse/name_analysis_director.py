@@ -288,7 +288,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             analysis = []
 
             # Configure the analysis for the supplied builder
-            get_classification(self, stand_alone_words, syn_svc, self.name_tokens, wc_svc, token_svc,np_svc)
+            get_classification(self, self.name_tokens, wc_svc, token_svc, np_svc.get_substitutions(), np_svc.get_compound_synonyms(), np_svc.get_synonyms())
 
             if auto_analyze_config in ('WELL_FORMED_NAME', 'EXACT_MATCH', 'SEARCH_CONFLICTS'):
                 check_words_to_avoid = builder.check_words_to_avoid(self.name_tokens, self.processed_name)
