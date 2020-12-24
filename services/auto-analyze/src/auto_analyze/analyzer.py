@@ -76,7 +76,7 @@ async def auto_analyze(name: str,
         similarity = EXACT_MATCH
     else:
         match_list = name_tokens
-        get_classification(service, match_list, np_svc, wc_svc, token_svc,
+        get_classification(service, match_list, wc_svc, token_svc,{},
                            dict_compound_synonyms_all, dict_simple_synonyms_all, conflict=True)
 
         dist_db_substitution_dict = builder.get_substitutions_distinctive(service.get_list_dist())
