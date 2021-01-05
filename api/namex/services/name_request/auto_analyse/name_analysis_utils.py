@@ -384,7 +384,7 @@ def remove_descriptive_same_category(dict_desc):
     return list(dict_desc_unique_category.keys()), dict_desc_unique_category
 
 
-def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitution_dict=None):
+def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitution_dict=None, queue=False):
     list_dist_final = []
     for item in list_dist:
         not_double_letters_item = remove_double_letters(item)
@@ -393,10 +393,11 @@ def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitut
             lambda x, value=item, singular_letter_value=not_double_letters_item: str.replace(x, value,
                                                                                              singular_letter_value),
             name_tokens))
-        if dist_substitution_dict:
-            dist_substitution_dict[not_double_letters_item] = dist_substitution_dict.pop(item)
-            if not dist_substitution_dict.get(not_double_letters_item):
-                dist_substitution_dict[not_double_letters_item].append(not_double_letters_item)
+        if not queue:
+            if dist_substitution_dict:
+                dist_substitution_dict[not_double_letters_item] = dist_substitution_dict.pop(item)
+                if not dist_substitution_dict.get(not_double_letters_item):
+                    dist_substitution_dict[not_double_letters_item].append(not_double_letters_item)
 
     return list_dist_final, name_tokens, dist_substitution_dict
 

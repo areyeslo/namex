@@ -200,7 +200,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
             dist_substitution_dict = dict_dist
 
         w_dist, list_name, dist_substitution_dict = remove_double_letters_list_dist_words(w_dist, list_name,
-                                                                                          dist_substitution_dict)
+                                                                                          dist_substitution_dict, queue)
 
         list_conflict_details = list()
 
