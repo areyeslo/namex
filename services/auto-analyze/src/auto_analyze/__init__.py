@@ -22,13 +22,13 @@ import config  # pylint: disable=wrong-import-order; # noqa: I001
 import quart.flask_patch
 from namex import models
 from namex.models import db, ma
-from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms_dictionary, \
-    get_compound_descriptives, get_substitutions_dictionary, update_compound_tokens
+from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list, get_synonyms_dictionary
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
+from .analyzer import get_substitutions_dictionary
 from quart import Quart, jsonify, request
 from swagger_client import SynonymsApi as SynonymService
 
-from .analyzer import auto_analyze, clean_name, get_compound_synonyms
+from .analyzer import auto_analyze, clean_name, get_compound_synonyms, update_name_tokens
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
@@ -109,16 +109,19 @@ async def private_service():
     list_words = list(set(get_flat_list(list(name_tokens_clean_dict.values()))))
 
     dict_all_simple_synonyms = get_synonyms_dictionary(syn_svc, dict_synonyms, list_words)
-    dict_all_compound_synonyms = get_compound_synonyms(name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms)
+    dict_all_compound_synonyms = get_compound_synonyms(service.name_processing_service, name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms)
+
+    dict_all_synonyms = {**dict_synonyms, **dict_all_simple_synonyms}
 
     # Need to split in compound terms the name
-    list_words = update_compound_tokens(list(dict_all_compound_synonyms.keys()), list_words)
+    name_tokens_clean_dict = update_name_tokens(list(dict_all_compound_synonyms.keys()), name_tokens_clean_dict)
 
-    dict_all_substitutions = get_substitutions_dictionary(syn_svc, dict_substitution, dict_synonyms, list_words)
+    list_words = list(set(get_flat_list(list(name_tokens_clean_dict.values()))))
+
+    dict_all_substitutions = get_substitutions_dictionary(syn_svc, dict_substitution, dict_all_synonyms, list_words)
 
     result = await asyncio.gather(
-        *[auto_analyze(name, name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms,
-                       dict_all_compound_synonyms, dict_all_simple_synonyms, dict_all_substitutions, stand_alone_words) for
+        *[auto_analyze(name, name_tokens, list_name, list_dist, list_desc, dict_all_substitutions, dict_all_synonyms, dict_all_compound_synonyms, stand_alone_words, service) for
           name, name_tokens in name_tokens_clean_dict.items()]
     )
     return jsonify(result=result)

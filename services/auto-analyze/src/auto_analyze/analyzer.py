@@ -25,7 +25,7 @@ from namex.services.name_request.auto_analyse.name_analysis_utils import (
     remove_double_letters_list_dist_words,
     remove_spaces_list,
     subsequences,
-    get_compound_descriptives)
+    get_compound_descriptives, update_compound_tokens)
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from namex.services.name_request.builders.name_analysis_builder import NameAnalysisBuilder
 from nltk.stem import PorterStemmer
@@ -57,35 +57,35 @@ async def auto_analyze(name: str,
                        list_name: list, list_dist: list,
                        list_desc: list, dict_substitution: dict,
                        dict_synonyms: dict,
-                       dict_simple_synonyms_all: dict,
                        dict_compound_synonyms_all: dict,
-                       dict_all_substitutions: dict,
-                       stand_alone_words: list) -> dict:
+                       stand_alone_words: list,
+                       np_svc_prep_data: name_analysis_service) -> dict:
     """Return a dictionary with name as key and similarity as value, 1.0 is an exact match."""
     logging.getLogger(__name__).debug(
         'name: %s ,  list_name %s,  list_dist: %s, list_desc: %s, dict_subst: %s,  dict_syns: %s',
         name_tokens, list_name, list_dist, list_desc, dict_substitution, dict_synonyms)
-    syn_svc = synonym_service
-    service = name_analysis_service
+
+    service = np_svc_prep_data
     wc_svc = service.word_classification_service
     token_svc = service.token_classifier_service
-    np_svc = service.name_processing_service
 
     dict_matches_counter = {}
+    all_dict_synonyms = {**dict_synonyms, **dict_compound_synonyms_all}
 
     if name_tokens == list_name:
         similarity = EXACT_MATCH
     else:
         match_list = name_tokens
-        get_classification(service, match_list, wc_svc, token_svc,{},
-                           dict_compound_synonyms_all, dict_simple_synonyms_all, conflict=True)
 
-        dist_db_substitution_dict = builder.get_substitutions_distinctive(service.get_list_dist())
+        get_classification(service, match_list, wc_svc, token_svc, dict_substitution,
+                           dict_compound_synonyms_all, dict_synonyms, conflict=True)
+
+        dist_db_substitution_dict = get_substitutions(service.get_list_dist(), dict_substitution)
         service._list_dist_words, match_list, _ = remove_double_letters_list_dist_words(service.get_list_dist(),
                                                                                         match_list)
 
-        desc_tmp_synonym_dict = builder.get_substitutions_descriptive(service.get_list_desc())
-        desc_tmp_synonym_dict = remove_extra_value(desc_tmp_synonym_dict, dict_synonyms)
+        desc_tmp_synonym_dict = get_substitutions(service.get_list_desc(), all_dict_synonyms)
+        desc_tmp_synonym_dict = remove_extra_value(desc_tmp_synonym_dict, all_dict_synonyms)
 
         # Update key in desc_db_synonym_dict
         service._dict_desc_words_search_conflicts = stem_key_dictionary(  # pylint: disable=protected-access
@@ -94,10 +94,15 @@ async def auto_analyze(name: str,
         service._dict_desc_words_search_conflicts = add_key_values(  # pylint: disable=protected-access
             service.get_dict_desc_search_conflicts()
         )
-        dict_synonyms = stem_key_dictionary(dict_synonyms)
-        dict_synonyms = add_key_values(dict_synonyms)
 
-        list_desc, dict_synonyms = remove_descriptive_same_category(dict_synonyms)
+        # Get dictionary for original words
+        dict_desc = update_dict(all_dict_synonyms, list_desc)
+
+        # Stem dictionary for original name
+        dict_desc_stemmed = stem_key_dictionary(dict_desc)
+        dict_desc_stemmed = add_key_values(dict_desc_stemmed)
+
+        list_desc, dict_desc_stemmed = remove_descriptive_same_category(dict_desc_stemmed)
 
         service._list_desc_words = list(  # pylint: disable=protected-access
             service.get_dict_desc_search_conflicts().keys()
@@ -128,7 +133,7 @@ async def auto_analyze(name: str,
                 list_dist=match_list_dist_desc,
                 list_desc=service.get_list_desc(),
                 original_class_list=list_dist,
-                class_subs_dict=dict_synonyms)
+                class_subs_dict=dict_desc_stemmed)
 
         similarity_dist = round(get_similarity(vector1_dist, vector2_dist, entropy_dist), 2)
 
@@ -144,12 +149,7 @@ async def auto_analyze(name: str,
         similarity = round((similarity_dist + similarity_desc) / 2, 2)
         logging.getLogger(__name__).debug('similarity: %s', similarity)
 
-    if similarity == EXACT_MATCH or (
-            similarity >= MINIMUM_SIMILARITY and not is_not_real_conflict(list_name,
-                                                                          stand_alone_words,
-                                                                          list_dist,
-                                                                          dict_synonyms,
-                                                                          service)):
+    if similarity >= MINIMUM_SIMILARITY:
         dict_matches_counter.update({name: similarity})
 
     return dict_matches_counter
@@ -334,12 +334,57 @@ def add_key_values(d1):
     return d1
 
 
-def get_compound_synonyms(name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms):
+def get_compound_synonyms(np_svc, name_tokens_clean_dict, syn_svc, dict_all_simple_synonyms):
     dct = {}
     dict_all_compound_synonyms = {}
     for key, value in name_tokens_clean_dict.items():
-        dct = get_compound_descriptives(value, syn_svc, dict_all_simple_synonyms)
+        dct = get_compound_descriptives(np_svc, value, syn_svc, dict_all_simple_synonyms)
         if dct:
-            dict_all_compound_synonyms.update(dct.pop())
+            dict_all_compound_synonyms.update(dct)
+            dct.clear()
 
     return dict_all_compound_synonyms
+
+
+def update_name_tokens(list_all_compound_synonyms, name_tokens_clean_dict):
+    compound_name_tokens_clean_dict = {}
+    for key, value in name_tokens_clean_dict.items():
+        compound_name = update_compound_tokens(list_all_compound_synonyms, value)
+        compound_name_tokens_clean_dict.update({key: compound_name})
+
+    return compound_name_tokens_clean_dict
+
+
+def get_substitutions(list_dist, all_substitution_dict):
+    substitution_dict = {}
+    for dist in list_dist:
+        substitutions = all_substitution_dict.get(dist)
+        if not substitutions:
+            substitutions = [dist]
+        elif dist not in substitutions:
+            substitutions.append(dist)
+        substitution_dict[dist] = substitutions
+
+    return substitution_dict
+
+
+def get_substitutions_dictionary(syn_svc, dict_substitution, dict_synonyms, list_words):
+    substitutions_dict = {}
+    for word in list_words:
+        substitutions = dict_substitution.get(word, None)
+        if not substitutions and word not in dict_synonyms:
+            substitutions = syn_svc.get_word_substitutions(word=word).data
+        if substitutions:
+            substitutions_dict.update({word: substitutions})
+
+    return substitutions_dict
+
+
+def update_dict(dict_desc, list_desc):
+    dict_desc_new = {}
+    for desc in list_desc:
+        if desc in dict_desc:
+            dict_desc_new.update({desc: dict_desc.get(desc)})
+        else:
+            dict_desc_new.update({desc: [desc]})
+    return dict_desc_new
