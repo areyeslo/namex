@@ -77,8 +77,8 @@ async def auto_analyze(name: str,
     else:
         match_list = name_tokens
 
-        get_classification(service, match_list, wc_svc, token_svc, dict_substitution,
-                           dict_compound_synonyms_all, dict_synonyms, conflict=True)
+        get_classification(service, match_list, wc_svc, token_svc, dict_compound_synonyms_all, dict_synonyms,
+                           conflict=True)
 
         dist_db_substitution_dict = get_substitutions(service.get_list_dist(), dict_substitution)
         service._list_dist_words, match_list, _ = remove_double_letters_list_dist_words(service.get_list_dist(),
