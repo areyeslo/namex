@@ -96,12 +96,13 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         ]
 
         results = self.find_word_synonyms(word, filters)
-        flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
-        if not flattened:
+        if not results:
             # Add ing to the word if applicable
             gerund = self.get_gerund_word(word)
-            flattened = [gerund] if gerund else []
-
+            results = [gerund, word] if gerund else []
+            return results
+        else:
+            flattened = list(map(str.strip, (list(filter(None, self.flatten_synonyms_text(results))))))
         return flattened
 
     def get_stop_words(self, word=None):
@@ -227,6 +228,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         # regex_prefixes is called in namex api before remove french
         # text = self.regex_prefixes(text, prefixes)
         text = self.regex_numbers_lot(text)
+        text = self.regex_remove_leading_zeros(text)
         text = self.regex_repeated_strings(text)
         text = self.regex_separated_ordinals(text, ordinal_suffixes)
         # text = self.regex_keep_together_abv(text, exceptions_ws)
@@ -265,6 +267,13 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
                       text,
                       0,
                       re.IGNORECASE)
+
+        return " ".join(text.split())
+
+    @classmethod
+    def regex_remove_leading_zeros(cls, text):
+        text = re.sub(r'\b0+(?=\d)', '', text, 0)
+
         return " ".join(text.split())
 
     @classmethod
@@ -353,4 +362,4 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
 
     def get_gerund_word(self, word):
         gerund = getInflection(word, 'VBG')
-        return [gerund[0]] if gerund is not None else ''
+        return gerund[0] if gerund is not None else ''

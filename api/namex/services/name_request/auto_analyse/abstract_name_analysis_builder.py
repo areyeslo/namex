@@ -2,12 +2,12 @@ import abc
 
 from . import ProcedureResult
 
-from .mixins.get_synonyms_lists import GetSynonymsListsMixin
+from namex.services.name_processing.mixins.get_synonym_lists import GetSynonymListsMixin
 from .mixins.get_designations_lists import GetDesignationsListsMixin
 from .mixins.get_word_classification_lists import GetWordClassificationListsMixin
 
 
-class AbstractNameAnalysisBuilder(GetSynonymsListsMixin, GetDesignationsListsMixin, GetWordClassificationListsMixin):
+class AbstractNameAnalysisBuilder(GetSynonymListsMixin, GetDesignationsListsMixin, GetWordClassificationListsMixin):
     __metaclass__ = abc.ABCMeta
 
     @property

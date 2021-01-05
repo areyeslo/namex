@@ -2,8 +2,11 @@ import re
 import warnings
 import ast
 
+from nltk.stem import porter
+
 from . import LanguageCodes
 from ..name_request.auto_analyse.mixins.get_designations_lists import GetDesignationsListsMixin
+from ..name_request.auto_analyse.mixins.get_word_classification_lists import GetWordClassificationListsMixin
 from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words, check_numbers_beginning, \
     get_compound_descriptives
 from namex.services.word_classification.word_classification import WordClassificationService
@@ -26,7 +29,7 @@ Setting the name using NameProcessingService.set_name will clean the name and se
 '''
 
 
-class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
+class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin,GetWordClassificationListsMixin):
     @property
     def name_as_submitted(self):
         return self._name_as_submitted
@@ -129,7 +132,7 @@ class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
         self.name_original_tokens = None
         self.processed_name = None
         self.name_tokens = None
-        self._compound_descriptive_name_tokens = None
+        self.compound_descriptive_name_tokens = None
         self.name_tokens_search_conflict = None
         self.distinctive_word_tokens = None
         self.descriptive_word_tokens = None
@@ -256,11 +259,12 @@ class NameProcessingService(GetSynonymListsMixin, GetDesignationsListsMixin):
         for word in list_name:
             synonym_response = syn_svc.get_word_synonyms(word=word).data
             if synonym_response:
-                self._synonyms[word] = list(set(synonym_response))
+                synonym_response.append(word.replace(" ",""))
+                self._synonyms.update({word: list(set(synonym_response))})
 
     def set_compound_synonyms_dictionary(self, list_name):
         syn_svc = self.synonym_service
-        self._compound_synonyms.update(get_compound_descriptives(list_name, syn_svc, {}))
+        self._compound_synonyms.update(get_compound_descriptives(self, list_name, syn_svc, {}))
 
     def set_substitutions_dictionary(self, list_name):
         syn_svc = self.synonym_service

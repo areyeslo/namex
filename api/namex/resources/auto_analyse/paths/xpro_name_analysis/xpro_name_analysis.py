@@ -142,6 +142,7 @@ class XproNameAnalysis(Resource):
             service.use_builder(builder)  # Required step! TODO: Enforce this!
             service.set_entity_type(entity_type)  # Required step! TODO: Enforce this!
             service.set_name(name)  # Required step! TODO: Enforce this!
+            service.set_synonym_dictionaries()
 
         except Exception as err:
             print('Error initializing XproNameAnalysis service: ' + repr(err.with_traceback(None)))

@@ -155,12 +155,12 @@ def check_synonyms(dict_all_synonyms, list_dist_words, list_desc_words, list_nam
 
     for word in list_name:
         if word in list_desc_words:
-            synonyms=None
+            synonyms = None
             if {word} <= dict_all_synonyms.keys():
                 synonyms = dict_all_synonyms.get(word)
 
             if synonyms:
-                dict_desc[word] = synonyms
+                dict_desc.update({word: synonyms})
                 list_desc.append(word)
                 if word in intersection:
                     list_dist_words.remove(word)
@@ -168,12 +168,15 @@ def check_synonyms(dict_all_synonyms, list_dist_words, list_desc_words, list_nam
     return list_dist_words, list_desc, dict_desc
 
 
-def update_substitution_dictionary(list_dist, dict_substitutions):
+def update_substitution_dictionary(list_dist, dict_substitutions, conflict=False):
     dict_dist = {}
     for dist in list_dist:
-        substitutions = dict_substitutions.get(dist, [dist])
-        if substitutions:
-            dict_dist.update({dist: substitutions})
+        if not conflict:
+            substitutions = dict_substitutions.get(dist, [dist])
+            if substitutions:
+                dict_dist.update({dist: substitutions})
+        else:
+            dict_dist.update({dist: [dist]})
 
     return dict_dist
 
@@ -205,23 +208,38 @@ def get_classification_summary(list_dist, list_desc, list_name):
     return classification_summary
 
 
-def get_conflicts_same_classification(builder, name_tokens, processed_name, stand_alone_words, list_dist, list_desc):
+def get_conflicts_same_classification(service, name_tokens, processed_name, stand_alone_words, list_dist, list_desc):
     list_dist, list_desc = \
         list_distinctive_descriptive(name_tokens, list_dist, list_desc)
+
+    # Update dictionaries
+    np_svc = service.name_processing_service
+    dict_all_synonyms = {**np_svc.get_compound_synonyms(), **np_svc.get_synonyms()}
+
     # Search conflicts coming from check_name_is_well_formed analysis
-    check_conflicts = builder.search_conflicts(list_dist, list_desc, list_desc, name_tokens, processed_name, stand_alone_words,
-                                               check_name_is_well_formed=True)
+    check_conflicts = service.search_conflicts(list_dist, list_desc, list_desc, dict_all_synonyms,
+                                               np_svc.get_substitutions(), name_tokens,
+                                               processed_name,
+                                               stand_alone_words,
+                                               check_name_is_well_formed=True, queue=False)
 
     return check_conflicts
 
 
-def get_classification(service, match, wc_svc, token_svc, dict_substitutions, dict_compound_synonyms_all, dict_simple_synonyms_all={}, conflict=False):
-    # desc_compound_dict = get_compound_descriptives(service, syn_svc)
-    service.set_compound_descriptive_name_tokens(
-        update_compound_tokens(list(dict_compound_synonyms_all.keys()), match))
+def get_classification(service, match, wc_svc, token_svc, dict_compound_synonyms_all, dict_simple_synonyms_all={},
+                       conflict=False):
+    # Update name tokenization based on compound synonyms
+    service.set_compound_descriptive_name_tokens(update_compound_tokens(
+        list(service.name_processing_service.get_compound_synonyms().keys()),
+        match))
 
-    service.token_classifier = wc_svc.classify_tokens(service.compound_descriptive_name_tokens)
+    service.token_classifier = wc_svc.classify_tokens(service.get_compound_descriptive_name_tokens())
     service._list_dist_words, service._list_desc_words, service._list_none_words = service.word_classification_tokens
+
+    # Add to synonyms dictionary elements just in descriptive, but not in distinctive
+    dict_synonyms = add_desc_in_dict_synonyms(dict_simple_synonyms_all, service.get_list_desc(), service.get_list_dist())
+    if dict_synonyms:
+        dict_simple_synonyms_all= dict_synonyms
 
     if service.get_list_none() and service.get_list_none().__len__() > 0:
         service._list_dist_words, service._list_desc_words = \
@@ -235,7 +253,7 @@ def get_classification(service, match, wc_svc, token_svc, dict_substitutions, di
     service._list_dist_words, service._list_desc_words, service._dict_desc_words = check_synonyms(dict_all_synonyms,
                                                                                                   service.get_list_dist(),
                                                                                                   service.get_list_desc(),
-                                                                                                  service.compound_descriptive_name_tokens)
+                                                                                                  service.get_compound_descriptive_name_tokens())
 
     service._list_none_words = update_none_list(service.get_list_none(), service.get_list_desc())
 
@@ -275,9 +293,6 @@ def get_classification(service, match, wc_svc, token_svc, dict_substitutions, di
                                                                            service.name_tokens_search_conflict)
     service.set_name_tokens_search_conflict(remove_spaces_list(service.name_tokens_search_conflict))
 
-    if not conflict:
-        service._dict_dist_words = update_substitution_dictionary(service.get_list_dist(), dict_substitutions)
-
     print("Classification for searching conflicts in NameX DB:")
     print(service.get_dict_name_search_conflicts())
 
@@ -289,11 +304,13 @@ def subsequences(iterable, length):
 def get_valid_compound_descriptive(syn_svc, original_synonyms_dict, list_compound):
     desc_dist = dict()
     for compound in list_compound:
-        synonym_response= original_synonyms_dict.get(compound, None)
+        synonym_response = original_synonyms_dict.get(compound, None)
         if not synonym_response:
             synonym_response = syn_svc.get_word_synonyms(word=compound.replace(" ", "")).data
 
         if synonym_response:
+            if compound not in synonym_response:
+                synonym_response.append(compound.replace(" ", ""))
             desc_dist[compound] = synonym_response
 
     return desc_dist
@@ -328,12 +345,14 @@ def update_token_list(list_dist_desc, list_name):
     return list_name_updated
 
 
-def get_compound_descriptives(name_tokens, syn_svc, original_synonyms_dict={}):
+def get_compound_descriptives(svc, name_tokens, syn_svc, original_synonyms_dict={}):
     list_compound = []
     for i in range(2, len(name_tokens)):
         list_compound.extend(subsequences(name_tokens, i))
 
     desc_compound_dict_validated = get_valid_compound_descriptive(syn_svc, original_synonyms_dict, list_compound)
+    svc._compound_descriptive_name_tokens = update_compound_tokens(list(desc_compound_dict_validated.keys()),
+                                                                   name_tokens)
 
     return desc_compound_dict_validated
 
@@ -385,7 +404,8 @@ def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitut
 def get_synonyms_dictionary(syn_svc, synonyms_original_dict, list_words):
     synonyms_dict = {}
     for word in list_words:
-        synonyms = synonyms_original_dict.get(word, None)
+        key= get_key_dictionary(word, synonyms_original_dict)
+        synonyms = synonyms_original_dict.get(key, None)
         if not synonyms:
             synonyms = syn_svc.get_word_synonyms(word=word).data
         if synonyms:
@@ -393,12 +413,32 @@ def get_synonyms_dictionary(syn_svc, synonyms_original_dict, list_words):
     return synonyms_dict
 
 
-# def get_valid_compound_descriptive(syn_svc, list_compound):
-#     desc_dist = dict()
-#     for compound in list_compound:
-#         if not substitution:
-#             substitution = syn_svc.get_word_synonyms(word=compound.replace(" ", "")).data
-#         if substitution:
-#             desc_dist[compound] = substitution
-#
-#     return desc_dist
+def add_desc_in_dict_synonyms(dict_synonyms, list_desc, list_dist):
+    dct = {}
+    for desc in list_desc:
+        key = get_key_dictionary(desc, dct)
+        values = dict_synonyms.get(key)
+        if values:
+            dct.update({desc: values})
+        elif (not dict_synonyms or desc not in dict_synonyms) and desc not in list_dist:
+            dct.update({desc: [desc]})
+
+    return dct
+
+
+def update_dict_synonyms(dict_synonyms, list_desc):
+    dct = {}
+    for desc in list_desc:
+        if not dict_synonyms or desc not in dict_synonyms:
+            dct.update({desc: [desc]})
+        else:
+            dct.update({desc: dict_synonyms.get(desc)})
+
+    return dct
+
+
+def get_key_dictionary(word, dct):
+    for key, values in dct.items():
+        if word in values:
+            return key
+    return None

@@ -1,28 +1,21 @@
 import os
 
+from swagger_client import SynonymsApi as SynonymService
+
 from namex.constants import BCUnprotectedNameEntityTypes
-from .mixins.get_synonyms_lists import GetSynonymsListsMixin
-from .mixins.get_designations_lists import GetDesignationsListsMixin
-from .mixins.get_word_classification_lists import GetWordClassificationListsMixin
-
-from . import AnalysisIssueCodes
-
-from ..auto_analyse.name_analysis_utils import check_synonyms, get_classification_summary, change_descriptive, \
-    get_classification, update_none_list
-
+from namex.services.name_processing.mixins.get_synonym_lists import GetSynonymListsMixin
 from namex.services.name_processing.name_processing \
     import NameProcessingService
-
-from namex.services.word_classification.word_classification \
-    import WordClassificationService
-
-from namex.services.word_classification.token_classifier \
-    import TokenClassifier
-
 from namex.services.virtual_word_condition.virtual_word_condition \
     import VirtualWordConditionService
-
-from swagger_client import SynonymsApi as SynonymService
+from namex.services.word_classification.token_classifier \
+    import TokenClassifier
+from namex.services.word_classification.word_classification \
+    import WordClassificationService
+from . import AnalysisIssueCodes
+from .mixins.get_designations_lists import GetDesignationsListsMixin
+from .mixins.get_word_classification_lists import GetWordClassificationListsMixin
+from ..auto_analyse.name_analysis_utils import get_classification
 
 '''
 This is the director for AutoAnalyseService.
@@ -31,7 +24,7 @@ This is the director for AutoAnalyseService.
 auto_analyze_config = os.getenv('AUTO_ANALYZE_CONFIG')
 
 
-class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, GetWordClassificationListsMixin):
+class NameAnalysisDirector(GetSynonymListsMixin, GetDesignationsListsMixin, GetWordClassificationListsMixin):
     @property
     def word_classification_service(self):
         return self._word_classification_service
@@ -264,9 +257,8 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
 
     def set_synonym_dictionaries(self):
         np_svc = self.name_processing_service
-        np_svc.set_synonyms_dictionary(self._list_name_words)
         np_svc.set_compound_synonyms_dictionary(self._list_name_words)
-        np_svc.set_substitutions_dictionary(self._list_name_words)
+        np_svc.set_synonyms_dictionary(np_svc.compound_descriptive_name_tokens)
 
     '''
     This is the main execution call that wraps name analysis checks. 
@@ -282,13 +274,18 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             syn_svc = self.synonym_service
             wc_svc = self.word_classification_service
             token_svc = self.token_classifier_service
-            np_svc = self._name_processing_service
+            np_svc = self.name_processing_service
             stand_alone_words = np_svc.get_stand_alone_words()
 
             analysis = []
 
             # Configure the analysis for the supplied builder
-            get_classification(self, self.name_tokens, wc_svc, token_svc, np_svc.get_substitutions(), np_svc.get_compound_synonyms(), np_svc.get_synonyms())
+            get_classification(self, self.name_tokens, wc_svc, token_svc, np_svc.get_compound_synonyms(),
+                               np_svc.get_synonyms())
+
+            # Get substitutions for distinctives:
+            self._substitutions = builder.get_substitutions_distinctive(self.get_list_dist())
+            self._dict_dist_words = self._substitutions
 
             if auto_analyze_config in ('WELL_FORMED_NAME', 'EXACT_MATCH', 'SEARCH_CONFLICTS'):
                 check_words_to_avoid = builder.check_words_to_avoid(self.name_tokens, self.processed_name)
