@@ -165,8 +165,12 @@ class BcNameAnalysis(Resource):
             # Register and initialize the builder
             service.use_builder(builder)  # Required step! TODO: Enforce this!
             service.set_entity_type(entity_type)  # Required step! TODO: Enforce this!
-            service.set_name(name)  # Required step! TODO: Enforce this!
-            service.set_synonym_dictionaries()
+
+            np_svc_prep_data = service.name_processing_service
+
+            np_svc_prep_data.prepare_data() # Required step! TODO: Enforce this!
+            service.set_name(name, np_svc_prep_data)  # Required step! TODO: Enforce this!
+            service.set_synonym_dictionaries() # Required step! TODO: Enforce this!
 
         except Exception as err:
             print('Error initializing BcNameAnalysis service: ' + repr(err.with_traceback(None)))
