@@ -147,14 +147,14 @@ def check_numbers_beginning(syn_svc, tokens):
     return tokens
 
 
-def check_synonyms(dict_all_synonyms, list_dist_words, list_desc_words, list_name):
+def check_synonyms(dict_all_synonyms, list_dist_words, list_desc_words, list_none_words, list_name):
     list_desc_words_set = frozenset(list_desc_words)
     list_desc = []
     dict_desc = {}
     intersection = [x for x in list_dist_words if x in list_desc_words_set]
 
     for word in list_name:
-        if word in list_desc_words:
+        if word in list_desc_words or word in list_none_words:
             synonyms = None
             if {word} <= dict_all_synonyms.keys():
                 synonyms = dict_all_synonyms.get(word)
@@ -236,11 +236,6 @@ def get_classification(service, match, wc_svc, token_svc, dict_compound_synonyms
     service.token_classifier = wc_svc.classify_tokens(service.get_compound_descriptive_name_tokens())
     service._list_dist_words, service._list_desc_words, service._list_none_words = service.word_classification_tokens
 
-    # Add to synonyms dictionary elements just in descriptive, but not in distinctive
-    dict_synonyms = add_desc_in_dict_synonyms(dict_simple_synonyms_all, service.get_list_desc(), service.get_list_dist())
-    if dict_synonyms:
-        dict_simple_synonyms_all= dict_synonyms
-
     if service.get_list_none() and service.get_list_none().__len__() > 0:
         service._list_dist_words, service._list_desc_words = \
             token_svc.handle_unclassified_words(
@@ -249,10 +244,17 @@ def get_classification(service, match, wc_svc, token_svc, dict_compound_synonyms
                 service.get_list_none(),
                 service.compound_descriptive_name_tokens
             )
+
+    # Add to synonyms dictionary elements just in descriptive, but not in distinctive
+    dict_synonyms = add_desc_in_dict_synonyms(dict_simple_synonyms_all, service.get_list_desc(), service.get_list_dist(), service.get_list_none(), match)
+    if dict_synonyms:
+        dict_simple_synonyms_all= dict_synonyms
+
     dict_all_synonyms = {**dict_compound_synonyms_all, **dict_simple_synonyms_all}
     service._list_dist_words, service._list_desc_words, service._dict_desc_words = check_synonyms(dict_all_synonyms,
                                                                                                   service.get_list_dist(),
                                                                                                   service.get_list_desc(),
+                                                                                                  service.get_list_none(),
                                                                                                   service.get_compound_descriptive_name_tokens())
 
     service._list_none_words = update_none_list(service.get_list_none(), service.get_list_desc())
@@ -395,7 +397,7 @@ def remove_double_letters_list_dist_words(list_dist, name_tokens, dist_substitut
             name_tokens))
         if not queue:
             if dist_substitution_dict:
-                dist_substitution_dict[not_double_letters_item] = dist_substitution_dict.pop(item)
+                dist_substitution_dict[not_double_letters_item] = [remove_double_letters(element) for element in dist_substitution_dict.pop(item)]
                 if not dist_substitution_dict.get(not_double_letters_item):
                     dist_substitution_dict[not_double_letters_item].append(not_double_letters_item)
 
@@ -414,15 +416,16 @@ def get_synonyms_dictionary(syn_svc, synonyms_original_dict, list_words):
     return synonyms_dict
 
 
-def add_desc_in_dict_synonyms(dict_synonyms, list_desc, list_dist):
+def add_desc_in_dict_synonyms(dict_synonyms, list_desc, list_dist, list_none, list_name):
     dct = {}
-    for desc in list_desc:
-        key = get_key_dictionary(desc, dct)
-        values = dict_synonyms.get(key)
-        if values:
-            dct.update({desc: values})
-        elif (not dict_synonyms or desc not in dict_synonyms) and desc not in list_dist:
-            dct.update({desc: [desc]})
+    for word in list_name:
+        if word in list_desc or word in list_none:
+            key = get_key_dictionary(word, dict_synonyms)
+            values = dict_synonyms.get(key)
+            if values:
+                dct.update({word: values})
+            elif word not in list_dist:
+                dct.update({word: [word]})
 
     return dct
 

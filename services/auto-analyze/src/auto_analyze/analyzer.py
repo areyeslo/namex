@@ -108,11 +108,8 @@ async def auto_analyze(name: str,
             service.get_dict_desc_search_conflicts().keys()
         )
 
-        # Check if list_dist needs to be spplitted based on service.get_list_dist()
-        list_dist = get_split_compound(list_dist, service.get_list_dist())
-        service._list_dist_words = get_split_compound(  # pylint: disable=protected-access
-            service.get_list_dist(),
-            list_dist)
+        list_dist = [element.replace(" ","")for element in list_dist]
+        service._list_dist_words = [element.replace(" ","") for element in service.get_list_dist()]
 
         list_dist_stem = [porter.stem(word) for word in list_dist]
         vector1_dist = text_to_vector(list_dist_stem)
@@ -311,19 +308,6 @@ def stem_key_dictionary(d1):
     dict_stem = {porter.stem(k): v for (k, v) in d1.items()}
 
     return dict_stem
-
-
-def get_split_compound(a_dist, b_dist):
-    """Split items in a_dist based on b_dist."""
-    str_tokens = ' '.join([str(elem) for elem in b_dist])
-    new_dist = list()
-    for element in a_dist:
-        if re.search(r'\b{0}\b'.format(re.escape(str_tokens.lower())), element.lower()):
-            new_dist.extend(b_dist)
-        else:
-            new_dist.append(element)
-
-    return new_dist
 
 
 def add_key_values(d1):
