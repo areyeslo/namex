@@ -517,7 +517,7 @@ class Request(db.Model):
         name_criteria = ''
         if dist_list:
             substitutions = cls.get_distinctive(dist_list, list_name)
-            name_criteria = cls.format_criteria(name_criteria, substitutions, r'\y(', r')+\y.*?')
+            name_criteria = cls.format_criteria(name_criteria, substitutions, r'^\w?\s*?\y(', r')+\y.*?')
         if desc_list:
             synonyms = cls.get_descriptive(desc_list, list_name)
             name_criteria = cls.format_criteria(name_criteria, synonyms, r'\y(', ')+')
@@ -582,7 +582,7 @@ class Request(db.Model):
         list_special_characters = []
         for element in list_d:
             list_special_characters.append(
-                r'\W*'.join(element[i:i + 1] + element[i:i + 1] + '?' for i in range(0, len(element), 1)))
+                r'\W*'.join(element[i:i + 1] + element[i:i + 1] + r'?' for i in range(0, len(element), 1)) + r'(es|[a-z])?')
 
         return list_special_characters
 
