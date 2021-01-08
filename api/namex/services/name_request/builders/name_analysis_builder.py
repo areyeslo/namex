@@ -283,11 +283,6 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
         if name_criteria:
             criteria = Request.insert_name_criteria(criteria, name_criteria)
             matches = Request.find_by_criteria_array(criteria, queue)
-        # matches = self.skip_name_matches_processed(matches)
-        # list_conflicts_details, forced = self.get_most_similar_names(dict_highest_counter, set(matches),
-        #                                                              dist_substitution_dict,
-        #                                                              desc_synonym_dict, list_name)
-        # list_details.extend(list_conflicts_details)
 
         return matches
 
