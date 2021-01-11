@@ -154,8 +154,6 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                          list_name,
                          name, stand_alone_words,
                          check_name_is_well_formed=False, queue=False):
-        pr = cProfile.Profile()
-        pr.enable()
         list_conflicts, most_similar_names = [], []
         dict_highest_counter, response = {}, {}
         self._list_processed_names = list()
@@ -195,10 +193,6 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
         most_similar_names.extend(
             sorted(list_conflicts, key=lambda item: (-item['score'], item['name']))[
             0:MAX_MATCHES_LIMIT])
-
-        pr.disable()
-        # after your program ends
-        pr.dump_stats('profile.pstat')
 
         return self.prepare_response(most_similar_names, queue, list_name, list_dist_words, list_desc_words)
 

@@ -277,8 +277,8 @@ class Request(db.Model):
         """Get the oldest NR in DRAFT state."""
         return db.session.query(Request). \
             filter(
-                Request.stateCd.in_([State.DRAFT]),
-                Request.nrNum.notlike('NR L%')). \
+            Request.stateCd.in_([State.DRAFT]),
+            Request.nrNum.notlike('NR L%')). \
             order_by(Request.submittedDate.asc()). \
             first()
 
@@ -517,10 +517,11 @@ class Request(db.Model):
         name_criteria = ''
         if dist_list:
             substitutions = cls.get_distinctive(dist_list, list_name)
-            name_criteria = cls.format_criteria(name_criteria, substitutions, r'^((\w+\s\w+\s+)|\w+\s+)?\y(', r')+\y.*?')
+            name_criteria = cls.format_criteria(name_criteria, substitutions, r'^(\W*(\w+\W*\w+\W*)|\W*\w+\W*)?\y(',
+                                                r')+.*?')
         if desc_list:
             synonyms = cls.get_descriptive(desc_list, list_name)
-            name_criteria = cls.format_criteria(name_criteria, synonyms, r'\y(', ')+')
+            name_criteria = cls.format_criteria(name_criteria, synonyms, r'\y(', r')+\y')
 
         return name_criteria
 
@@ -582,7 +583,8 @@ class Request(db.Model):
         list_special_characters = []
         for element in list_d:
             list_special_characters.append(
-                r'\W*'.join(element[i:i + 1] + element[i:i + 1] + r'?' for i in range(0, len(element), 1)) + r'(?:es|[a-z])?')
+                r'\W*'.join(
+                    element[i:i + 1] + element[i:i + 1] + r'?' for i in range(0, len(element), 1)) + r'(?:es|[a-z])?')
 
         return list_special_characters
 
@@ -593,6 +595,30 @@ class Request(db.Model):
             list_special_characters.append(r'\W*'.join(element[i:i + 1] for i in range(0, len(element), 1)))
 
         return list_special_characters
+
+    @classmethod
+    def get_distinctive(cls, dist_list, list_name):
+        substitutions = ''
+        for i, word in enumerate(list_name):
+            for j, dist_sublist in enumerate(dist_list):
+                if word in dist_sublist:
+                    special_characters_dist = Request.set_special_characters_distinctive(dist_sublist)
+                    substitutions += '(' + '|'.join(map(str, special_characters_dist)) + ')|'
+                    dist_list.pop(j)
+                    break
+        return substitutions
+
+    @classmethod
+    def get_descriptive(cls, desc_list, list_name):
+        synonyms = ''
+        for i, word in enumerate(list_name):
+            for j, desc_sublist in enumerate(desc_list):
+                if word.replace(" ", "") in desc_sublist:
+                    special_characters_descriptive = Request.set_special_characters_descriptive(desc_sublist)
+                    synonyms += ' ?|'.join(map(str, special_characters_descriptive)) + ' ?|'
+                    desc_list.pop(j)
+                    break
+        return synonyms
 
     @classmethod
     def include_designations_in_name(cls, special_characters_name, any_designation_list, end_designation_list,
